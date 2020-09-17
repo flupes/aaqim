@@ -1,23 +1,24 @@
 #include <Arduino.h>
-
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-#include <ESP8266HTTPClient.h>
-#include <ArduinoJson.h>
 // #include <StreamUtils.h>
 
 #include "credentials.h"
+#include "stats.h"
+#include "cfaqi.h"
 
 // how to:
 // https://arduinojson.org/v6/how-to/use-arduinojson-with-httpclient/
 
 ESP8266WiFiMulti wifiMulti;
 
-String request_str = "http://www.purpleair.com/json?show=59927|65489|54857|36667|25301";
+String request_str =
+    "http://www.purpleair.com/json?show=59927|65489|54857|36667|25301";
 // String request_str = "http://www.purpleair.com/json?show=59927";
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
@@ -25,24 +26,18 @@ void setup()
   wifiMulti.addAP(SSID, PASS);
 }
 
-void loop()
-{
+void loop() {
   static bool connectionWasAlive = true;
 
-  if (wifiMulti.run() != WL_CONNECTED)
-  {
-    if (connectionWasAlive == true)
-    {
+  if (wifiMulti.run() != WL_CONNECTED) {
+    if (connectionWasAlive == true) {
       connectionWasAlive = false;
       Serial.print("Looking for WiFi ");
     }
     Serial.print(".");
     delay(500);
-  }
-  else
-  {
-    if (connectionWasAlive == false)
-    {
+  } else {
+    if (connectionWasAlive == false) {
       Serial.println("Connected to WiFi :-)");
     }
 
@@ -62,8 +57,7 @@ void loop()
     // deserializeJson(doc, loggingStream);
 
     // Parse succeeded?
-    if (err)
-    {
+    if (err) {
       Serial.print(F("deserializeJson() returned "));
       Serial.println(err.c_str());
       return;
@@ -81,8 +75,11 @@ void loop()
     Serial.print("Array count = ");
     Serial.println(sensorsArray.size());
 
-    for (JsonObject sensor : sensorsArray)
-    {
+    const int MAX_READINGS = 32;
+    float cfvalues[MAX_READINGS];
+    int readingsCount = 0;
+
+    for (JsonObject sensor : sensorsArray) {
       int32_t id = sensor["ID"];
       Serial.print("ID = ");
       Serial.print(id);
@@ -90,8 +87,7 @@ void loop()
       Serial.print(" / Label = ");
       Serial.println(label);
       int32_t parent = sensor["ParentID"];
-      if (parent == 0)
-      {
+      if (parent == 0) {
         // This is the primary sensor (no parent)
         int16_t temperature_f = sensor["temp_f"];
         Serial.print("  Temperature deg F = ");
@@ -102,22 +98,39 @@ void loop()
         float pressure = sensor["pressure"];
         Serial.print("  Pressure mb = ");
         Serial.println(pressure);
-      }
-      else {
+      } else {
         Serial.print("  parentID = ");
         Serial.println(parent);
       }
       float pm25cf = sensor["pm2_5_cf_1"];
+      if (readingsCount < MAX_READINGS - 1) {
+        cfvalues[readingsCount++] = pm25cf;
+      }
       Serial.print("  pm 2.5 cf = ");
       Serial.println(pm25cf);
     }
 
-    // Read values
-    Serial.println(doc["Label"].as<String>());
-
     // Disconnect
     http.end();
 
-    delay(20 * 1000);
+    Serial.print("Number of readings = ");
+    Serial.println(readingsCount);
+    float avg;
+    float error;
+    mean_error(readingsCount, cfvalues, avg, error);
+    Serial.print("average PM2.5 = ");
+    Serial.print(avg);
+    Serial.print(" / error = ");
+    Serial.println(error);
+
+    int16_t aqiValue;
+    AqiLevel aqiLevel;
+    pm25_to_aqi(avg, aqiValue, aqiLevel);
+    Serial.print("AQI = ");
+    Serial.print(aqiValue);
+    Serial.print(" --> ");
+    Serial.println(AqiNames[static_cast<int>(aqiLevel)]);
+
+    delay(60 * 1000);
   }
 }
