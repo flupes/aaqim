@@ -1,5 +1,11 @@
 # aaqim = Arduino AQI Monitor
 
+Simple Air Quality Monitor using data collected from the web. Based on an ESP8266 and E-paper display.
+
+This is not a general, multi-purpose code base, but a quick hack for personal use.
+
+The `pm25_to_aqi` provides however a potential useful conversion function that passes its unit tests.
+
 ## Why
 
 The air quality has been a real concern in the West from August 2020.
@@ -14,8 +20,8 @@ So this project relies on micro-controller with WiFi capabilities. This project 
 ## Bill of Material
 
 Not by design, but un-unsed parts from previous projects:
-  - ESP8266 (Adafruit Huzzah)[https://www.adafruit.com/product/2821]
-  - (2.7in E-paper Dislay)[https://www.embeddedartists.com/products/2-7-inch-e-paper-display/]
+  - ESP8266 [Adafruit Huzzah](https://www.adafruit.com/product/2821)
+  - [2.7in E-paper Dislay](https://www.embeddedartists.com/products/2-7-inch-e-paper-display)
   - LiPo battery (need to find one).
 
 
