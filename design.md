@@ -29,7 +29,7 @@ So we have: 22 bits (timestamp) + 9 bits (AQI) + 1 bit reserve = 4 bytes.
 
 Storage for 12h at 3' interval: 12 * 20 * 4 = 960 bytes total.
 
-*Note: why go to such extreme to pack the data when the micro-controller offers almost 3 order of magnitude of flash space? Because we have to play with the limitation of the flash that wears out and force you to erase one full sector at once to re-write new data!*
+*Note: why go to such extreme to pack the data when the micro-controller offers almost 3 order of magnitude more of flash space? Because we have to play with the limitation of the flash that wears out and force you to erase one full sector at once to re-write new data!*
 
 ### Wear leveling
 
