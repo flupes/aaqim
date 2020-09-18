@@ -23,7 +23,7 @@ Each AQI sample has a value between 0 and 500 max, so 9 bits are sufficient for 
 Because we cannot guaranty to always record at regular intervals (for example, the board could be shutdown for a few hours), it is necessary to record a timestamp together with the AQI value. Otherwise, we would graph data that is actually not continuous.
 
 Since we plan one sample every 3 minutes, choosing a time resolution of a minute is sufficient. By deciding to encode the timestamp on 22 bits, we can last almost 8 full years: 
-2 ^ 22 / ( 365.25 * 24 * 60 ) = 7.97. If we select January 1st, 2020 for our Epoch, we shoudl outlast the board life (and certainly the Purple Air API).
+2 ^ 22 / ( 365.25 * 24 * 60 ) = 7.97. If we select January 1st, 2020 for our Epoch, we should outlast the board life (and certainly the Purple Air API).
 
 So we have: 22 bits (timestamp) + 9 bits (AQI) + 1 bit reserve = 4 bytes.
 
@@ -34,6 +34,8 @@ Storage for 12h at 3' interval: 12 * 20 * 4 = 960 bytes total.
 ### Wear leveling
 
 There is a trade off between writting data to the flash too often (you need to write a full sector) to avoid wearing out the flash, and at the same time writting frequently enough to avoid large gaps in the graph after a reboot.
+
+The Huzzah board can be battery powered, which should remove the power outage concerns, but there still be resets intentional (reflashing the board to test a new feature) or un-intentional (software bug).
 
 It seems difficult to obtain the exact specification from the flash memory inside a $3 micro-controller chip. However, several forums tend to indicate that the flash on the ESP8266 could sustain 100'000 writes.
 
