@@ -29,9 +29,11 @@ So we have: 22 bits (timestamp) + 9 bits (AQI) + 1 bit reserve = 4 bytes.
 
 Storage for 12h at 3' interval: 12 * 20 * 4 = 960 bytes total.
 
+*Note: why go to such extreme to pack the data when the micro-controller offers almost 3 order of magnitude of flash space? Because we have to play with the limitation of the flash that wears out and force you to erase one full sector at once to re-write new data!*
+
 ### Wear leveling
 
 There is a trade off between writting data to the flash too often (you need to write a full sector) to avoid wearing out the flash, and at the same time writting frequently enough to avoid large gaps in the graph after a reboot.
 
-It seems difficult to obtain the exact specification from the flash memory inside a $3 micro-controller chip. However, several forum tend to indicate that the flash on the ESP8266 could sustain 100'000 writes.
+It seems difficult to obtain the exact specification from the flash memory inside a $3 micro-controller chip. However, several forums tend to indicate that the flash on the ESP8266 could sustain 100'000 writes.
 
