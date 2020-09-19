@@ -44,7 +44,12 @@ void test_timestamp(void) {
   TEST_ASSERT_EQUAL_UINT32(now, seconds);
 }
 
+#if defined(ARDUINO)
+#include <Arduino.h>
+void setup() {
+#else
 int main(int argc, char **argv) {
+#endif
   UNITY_BEGIN();
   RUN_TEST(test_data_structure);
   RUN_TEST(test_pressure);
@@ -53,3 +58,7 @@ int main(int argc, char **argv) {
   RUN_TEST(test_timestamp);
   UNITY_END();
 }
+
+#if defined(ARDUINO)
+void loop() {}
+#endif

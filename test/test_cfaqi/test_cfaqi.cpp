@@ -40,11 +40,18 @@ void test_function_pm25_to_aqi_conversions(void) {
   }
 }
 
+#if defined(ARDUINO)
+#include <Arduino.h>
+void setup() {
+#else
 int main(int argc, char **argv) {
+#endif
   UNITY_BEGIN();
   RUN_TEST(test_function_pm25_to_aqi_out_of_range);
   RUN_TEST(test_function_pm25_to_aqi_conversions);
   UNITY_END();
-
-  return 0;
 }
+
+#if defined(ARDUINO)
+void loop() {}
+#endif

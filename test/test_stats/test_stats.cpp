@@ -29,11 +29,20 @@ void test_avg_int_10(void) {
     TEST_ASSERT_EQUAL_FLOAT(0.2857143, nmae);
 }
 
+#if defined(ARDUINO)
+#include <Arduino.h>
+void setup() {
+#else
 int main(int argc, char **argv) {
+#endif
   UNITY_BEGIN();
   RUN_TEST(test_avg_float_1);
   RUN_TEST(test_avg_float_100);
   RUN_TEST(test_avg_int_10);
   UNITY_END();
-  return 0;
 }
+
+#if defined(ARDUINO)
+void loop() {}
+#endif
+
