@@ -1,11 +1,6 @@
-#include "measurement.h"
+#include "air_sample.h"
 
 #include "unity.h"
-
-void test_data_structure(void) {
-  uint32_t sz = sizeof(MeasurementData);
-  TEST_ASSERT_EQUAL(MEASUREMENT_SIZE, sz);
-}
 
 void test_pressure(void) {
   TEST_ASSERT_EQUAL_UINT16(0, pressure_mbar_to_short(550.0));
@@ -44,8 +39,14 @@ void test_timestamp(void) {
   TEST_ASSERT_EQUAL_UINT32(now, seconds);
 }
 
+void test_data_structure(void) {
+  uint32_t sz = sizeof(AirSampleData);
+  TEST_ASSERT_EQUAL(kCompactedSampleSize, sz);
+}
+
 #if defined(ARDUINO)
 #include <Arduino.h>
+void loop() {}
 void setup() {
 #else
 int main(int argc, char **argv) {
@@ -58,7 +59,3 @@ int main(int argc, char **argv) {
   RUN_TEST(test_timestamp);
   UNITY_END();
 }
-
-#if defined(ARDUINO)
-void loop() {}
-#endif

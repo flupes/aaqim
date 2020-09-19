@@ -1,11 +1,11 @@
-#ifndef AAQIM_MEASUREMENT_H
-#define AAQIM_MEASUREMENT_H
+#ifndef AAQIM_AIR_SAMPLE_H
+#define AAQIM_AIR_SAMPLE_H
 
 #include <stdint.h>
 
 #include "cfaqi.h"
 
-static const uint32_t MEASUREMENT_SIZE = 16;
+static const uint32_t kCompactedSampleSize = 16;
 
 const uint32_t k2019epoch = 1546300800;  // Offset for compacted timestamps
 
@@ -82,7 +82,7 @@ void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
   seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
-struct MeasurementData {
+struct AirSampleData {
   uint8_t timestamp24[3];
   uint8_t reserved;
   uint16_t pm_1_0_short;
@@ -91,20 +91,20 @@ struct MeasurementData {
   uint16_t pressure_short;
   uint8_t temperature_byte;
   uint8_t humidity_byte;
-  uint8_t quality_byte;
+  uint8_t stats_byte;
   uint8_t crc;
 };
 
-class Measurement {
+class AirSample {
  public:
-  Measurement() { Set(k2019epoch, 0.0f, 0.0f, 0.0f, 1000.0f, 0, 0); }
+  AirSample() { Set(k2019epoch, 0.0f, 0.0f, 0.0f, 1000.0f, 0, 0); }
 
-  Measurement(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
+  AirSample(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
               float pressure, int temperature, int humidity) {
     Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity);
   }
 
-  Measurement(const MeasurementData &data) {
+  AirSample(const AirSampleData &data) {
     timestamp_22bits_to_unix_seconds(data.timestamp24, seconds_);
     pm_1_0_cf_ = short_to_cf(data.pm_1_0_short);
     pm_2_5_cf_ = short_to_cf(data.pm_2_5_short);
@@ -133,7 +133,7 @@ class Measurement {
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
-  void SetData(MeasurementData &data) {
+  void SetData(AirSampleData &data) {
     unix_seconds_to_timestamp_22bits(seconds_, data.timestamp24);
     data.pm_1_0_short = cf_to_short(pm_1_0_cf_);
     data.pm_2_5_short = cf_to_short(pm_2_5_cf_);
@@ -149,10 +149,12 @@ class Measurement {
   float pm_1_0_cf_;
   float pm_2_5_cf_;
   float pm_10_0_cf_;
+  float pm_2_5_nmae_;
   float pressure_;
   int16_t temperature_f_;
   int16_t aqi_pm25_;
   uint8_t humidity_;
+  uint8_t samples_count_;
   AqiLevel aqi_level_;
 };
 
