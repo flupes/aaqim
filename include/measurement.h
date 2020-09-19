@@ -2,7 +2,6 @@
 #define AAQIM_MEASUREMENT_H
 
 #include <stdint.h>
-#include <string.h>
 
 #include "cfaqi.h"
 
@@ -72,12 +71,14 @@ void unix_seconds_to_timestamp_22bits(uint32_t seconds, uint8_t ts24[]) {
     timestamp32 = (seconds - k2019epoch) / kSecondsResolution;
     timestamp32 &= 0x3FFFFF;  // forget bits of rank larger than 22!
   }
-  memcpy(ts24, &timestamp32, 3);
+  ts24[0] = timestamp32 >> 16;
+  ts24[1] = (0xFFFF & timestamp32) >> 8;
+  ts24[2] = 0xFF & timestamp32;
 }
 
 void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
   uint32_t timestamp32;
-  memcpy(&timestamp32, ts24, 3);
+  timestamp32 = ((uint32_t)(ts24[0]) << 16) + ((uint16_t)(ts24[1]) << 8) + ts24[2];
   seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
@@ -140,7 +141,7 @@ class Measurement {
     data.pressure_short = pressure_mbar_to_short(pressure_);
     data.temperature_byte = temperature_f_to_byte(temperature_f_);
     data.humidity_byte = humidity_;
-    data.crc = 0; // TOFIX !
+    data.crc = 0;  // TOFIX !
   }
 
  protected:
