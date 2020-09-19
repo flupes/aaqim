@@ -38,13 +38,13 @@ uint8_t temperature_f_to_byte(int16_t temperature_f) {
   } else if (temperature_f > (0xFF + kTemperatureOffsetF)) {
     coded_temperature = 0xFF;
   } else {
-    coded_temperature = temperature_f + kTemperatureOffsetF;
+    coded_temperature = temperature_f - kTemperatureOffsetF;
   }
   return coded_temperature;
 }
 
 int16_t byte_to_temperature_f(uint8_t coded_temperature) {
-  return (int16_t)(coded_temperature)-kTemperatureOffsetF;
+  return (int16_t)(coded_temperature)+kTemperatureOffsetF;
 }
 
 uint16_t cf_to_short(float concentration) {
@@ -78,13 +78,14 @@ void unix_seconds_to_timestamp_22bits(uint32_t seconds, uint8_t ts24[]) {
 
 void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
   uint32_t timestamp32;
-  timestamp32 = ((uint32_t)(ts24[0]) << 16) + ((uint16_t)(ts24[1]) << 8) + ts24[2];
+  timestamp32 =
+      ((uint32_t)(ts24[0]) << 16) + ((uint16_t)(ts24[1]) << 8) + ts24[2];
   seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
 void stats_to_byte(float nmae, uint8_t count, uint8_t &code) {
-  code = ( 0x0F & count ) << 4;
-  // let's assume that nmea was computed right and is positive! 
+  code = (0x0F & count) << 4;
+  // let's assume that nmea was computed right and is positive!
   code |= 0x0F & (uint8_t)(nmae * 16.0);
 }
 
@@ -111,8 +112,10 @@ class AirSample {
   AirSample() { Set(k2019epoch, 0.0f, 0.0f, 0.0f, 1000.0f, 0, 0, 0, 0.0f); }
 
   AirSample(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
-              float pressure, int temperature, int humidity, int count, float nmae) {
-    Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity, count, nmae);
+            float pressure, int temperature, int humidity, int count,
+            float nmae) {
+    Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity, count,
+        nmae);
   }
 
   AirSample(const AirSampleData &data) {
@@ -128,7 +131,8 @@ class AirSample {
   }
 
   void Set(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
-           float pressure, int temperature, int humidity, int count, float nmae) {
+           float pressure, int temperature, int humidity, int count,
+           float nmae) {
     seconds_ = seconds;
     pm_1_0_cf_ = pm_1_0;
     pm_2_5_cf_ = pm_2_5;
@@ -158,6 +162,19 @@ class AirSample {
     stats_to_byte(pm_2_5_nmae_, samples_count_, data.stats_byte);
     data.crc = 0;  // TOFIX !
   }
+
+  uint32_t Seconds() { return seconds_; }
+  float Pm_1_0() { return pm_1_0_cf_; }
+  float Pm_2_5() { return pm_2_5_cf_; }
+  float Pm_10_0() { return pm_10_0_cf_; }
+  float Pm_2_5_Nmae() { return pm_2_5_nmae_; }
+  float PressureMbar() { return pressure_; }
+  int16_t TemperatureF() { return temperature_f_; }
+  float TemperatureC() { return ((float)temperature_f_ - 32.0f)*5.0f/9.0f; }
+  int16_t AqiPm_2_5() { return aqi_pm25_; }
+  uint8_t HumidityPercent() { return humidity_; }
+  uint8_t SamplesCount() { return samples_count_; }
+  AqiLevel Level() { return aqi_level_; }
 
  protected:
   uint32_t seconds_;

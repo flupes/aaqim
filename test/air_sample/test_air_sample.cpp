@@ -14,7 +14,7 @@ void test_pressure(void) {
 void test_temperature(void) {
   TEST_ASSERT_EQUAL_UINT8(0, temperature_f_to_byte(-101));
   TEST_ASSERT_EQUAL_UINT8(255, temperature_f_to_byte(156));
-  for (uint16_t t = -100; t<156; t++) {
+  for (int16_t t = -100; t<156; t++) {
     uint8_t b = temperature_f_to_byte(t);
     TEST_ASSERT_EQUAL_INT16(t, byte_to_temperature_f(b));
   }
@@ -74,6 +74,23 @@ void test_stats(void) {
 void test_data_structure(void) {
   uint32_t sz = sizeof(AirSampleData);
   TEST_ASSERT_EQUAL(kCompactedSampleSize, sz);
+
+  uint32_t seconds = k2019epoch + 365 * 24 * 3600;
+  AirSample input(seconds, 10.0f, 50.0f, 100.0f, 1000.0f, 77, 40, 5, 0.1f);
+
+  AirSampleData data;
+  input.SetData(data);
+  AirSample output(data);
+  TEST_ASSERT_EQUAL(seconds, output.Seconds());
+  TEST_ASSERT_EQUAL(10.0f, output.Pm_1_0());
+  TEST_ASSERT_EQUAL(50.0f, output.Pm_2_5());
+  TEST_ASSERT_EQUAL(100.0f, output.Pm_10_0());
+  TEST_ASSERT_EQUAL(1000.0f, output.PressureMbar());
+  TEST_ASSERT_EQUAL(77, output.TemperatureF());
+  TEST_ASSERT_EQUAL(25.0f, output.TemperatureC());
+  TEST_ASSERT_EQUAL(40, output.HumidityPercent());
+  TEST_ASSERT_EQUAL(5, output.SamplesCount());
+  TEST_ASSERT_EQUAL(0.1f, output.Pm_2_5_Nmae());
 }
 
 #if defined(ARDUINO)
@@ -84,10 +101,10 @@ void setup() {
 int main(int argc, char **argv) {
 #endif
   UNITY_BEGIN();
-  RUN_TEST(test_data_structure);
   RUN_TEST(test_pressure);
   RUN_TEST(test_temperature);
   RUN_TEST(test_concentration);
   RUN_TEST(test_timestamp);
+  RUN_TEST(test_data_structure);
   UNITY_END();
 }
