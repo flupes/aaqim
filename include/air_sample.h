@@ -6,6 +6,7 @@
 #include "cfaqi.h"
 
 static const uint32_t kCompactedSampleSize = 16;
+static const uint32_t kNaturalSampleSize = 32;
 
 const uint32_t k2019epoch = 1546300800;  // Offset for compacted timestamps
 
@@ -188,6 +189,7 @@ class AirSample {
   uint8_t humidity_;
   uint8_t samples_count_;
   AqiLevel aqi_level_;
+  uint8_t reserved_;
 };
 
 #endif

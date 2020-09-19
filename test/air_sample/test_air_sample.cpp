@@ -72,8 +72,8 @@ void test_stats(void) {
 }
 
 void test_data_structure(void) {
-  uint32_t sz = sizeof(AirSampleData);
-  TEST_ASSERT_EQUAL(kCompactedSampleSize, sz);
+  TEST_ASSERT_EQUAL(kCompactedSampleSize, sizeof(AirSampleData));
+  TEST_ASSERT_EQUAL(kNaturalSampleSize, sizeof(AirSample));
 
   uint32_t seconds = k2019epoch + 365 * 24 * 3600;
   AirSample input(seconds, 10.0f, 50.0f, 100.0f, 1000.0f, 77, 40, 5, 0.1f);
