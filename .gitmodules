@@ -1,0 +1,6 @@
+[submodule "lib/Adafruit-GFX-Library"]
+	path = lib/Adafruit-GFX-Library
+	url = https://github.com/flupes/Adafruit-GFX-Library.git
+[submodule "externals/ePaperDisplay"]
+	path = externals/ePaperDisplay
+	url = https://github.com/flupes/e-Paper.git
