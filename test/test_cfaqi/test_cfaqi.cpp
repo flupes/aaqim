@@ -35,7 +35,7 @@ void test_function_pm25_to_aqi_conversions(void) {
     bool valid = pm25_to_aqi(c, value, level);
     TEST_ASSERT_TRUE(valid);
     TEST_ASSERT_EQUAL(aqivalues[i], value);
-    TEST_ASSERT_EQUAL(static_cast<int>(level), level);
+    TEST_ASSERT_EQUAL(aqilevels[i], static_cast<int>(level));
     i++;
   }
 }
