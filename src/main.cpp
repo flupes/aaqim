@@ -1,3 +1,5 @@
+#if defined(ARDUINO)
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
@@ -134,3 +136,8 @@ void loop() {
     delay(60 * 1000);
   }
 }
+
+#else
+// Something trivial to avoid pio errors
+int main(void) { return 0; }
+#endif
