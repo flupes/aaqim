@@ -25,11 +25,31 @@ void test_temperature(void) {
   }
 }
 
+void test_concentration(void) {
+  TEST_ASSERT_EQUAL_UINT16(0, cf_to_short(-1.0f));
+  TEST_ASSERT_EQUAL_UINT16(0xFFFF, cf_to_short(513.0));
+  for (float c = 0.0; c<512.f; c+=0.25) {
+    uint16_t s = cf_to_short(c);
+    float r = short_to_cf(s);
+    TEST_ASSERT_TRUE(fabs(c-r) < 0.01f);
+  }
+}
+
+void test_timestamp(void) {
+  uint8_t ts24[3];
+  uint32_t now = k2019epoch + 1000 * 24 * 3600;
+  unix_seconds_to_timestamp_22bits(now, ts24);
+  uint32_t seconds;
+  timestamp_22bits_to_unix_seconds(ts24, seconds);
+  TEST_ASSERT_EQUAL_UINT32(now, seconds);
+}
+
 int main(int argc, char **argv) {
   UNITY_BEGIN();
   RUN_TEST(test_data_structure);
   RUN_TEST(test_pressure);
   RUN_TEST(test_temperature);
+  RUN_TEST(test_concentration);
+  RUN_TEST(test_timestamp);
   UNITY_END();
-  return 0;
 }

@@ -2,6 +2,7 @@
 #define AAQIM_MEASUREMENT_H
 
 #include <stdint.h>
+#include <string.h>
 
 #include "cfaqi.h"
 
@@ -10,21 +11,18 @@ static const uint32_t MEASUREMENT_SIZE = 16;
 const uint32_t k2019epoch = 1546300800;  // Offset for compacted timestamps
 
 const int16_t kTemperatureOffsetF = -100;
-const uint32_t kPressureOffsetPa = 60000u;
-const uint32_t kMaxRecordablePressurePa = 125500u;
+const uint32_t kPressureOffsetPa = 60000U;
+const uint32_t kMaxRecordablePressurePa = 125500U;
 
-const uint32_t kSecondsResolution = 180;
-
+const uint32_t kSecondsResolution = 60;
 
 uint16_t pressure_mbar_to_short(float pressure_mbar) {
   uint16_t coded_pressure;
-  if ( pressure_mbar < (float)kPressureOffsetPa/100.0)  {
+  if (pressure_mbar < (float)kPressureOffsetPa / 100.0) {
     coded_pressure = 0;
-  }
-  else if (pressure_mbar > (float)kMaxRecordablePressurePa/100.0) {
-    coded_pressure = (uint16_t)(kMaxRecordablePressurePa-kPressureOffsetPa);
-  }
-  else {
+  } else if (pressure_mbar > (float)kMaxRecordablePressurePa / 100.0) {
+    coded_pressure = (uint16_t)(kMaxRecordablePressurePa - kPressureOffsetPa);
+  } else {
     coded_pressure = (uint16_t)(100.0 * pressure_mbar - kPressureOffsetPa);
   }
   return coded_pressure;
@@ -36,9 +34,9 @@ float short_to_mbar_pressure(uint16_t coded_pressure) {
 
 uint8_t temperature_f_to_byte(int16_t temperature_f) {
   uint8_t coded_temperature;
-  if ( temperature_f < kTemperatureOffsetF) {
+  if (temperature_f < kTemperatureOffsetF) {
     coded_temperature = 0;
-  } else if ( temperature_f > (0xFF+kTemperatureOffsetF) ) {
+  } else if (temperature_f > (0xFF + kTemperatureOffsetF)) {
     coded_temperature = 0xFF;
   } else {
     coded_temperature = temperature_f + kTemperatureOffsetF;
@@ -47,23 +45,40 @@ uint8_t temperature_f_to_byte(int16_t temperature_f) {
 }
 
 int16_t byte_to_temperature_f(uint8_t coded_temperature) {
-  return (int16_t)(coded_temperature) -  kTemperatureOffsetF;
+  return (int16_t)(coded_temperature)-kTemperatureOffsetF;
 }
 
 uint16_t cf_to_short(float concentration) {
   uint16_t coded_concentration;
   if (concentration < 0.0f) {
     coded_concentration = 0;
-  } else if ( concentration > 512.0f) {
+  } else if (concentration > 512.0f) {
     coded_concentration = 0xFFFF;
   } else {
-    coded_concentration = (uint16_t)(concentration / 128.0f);
+    coded_concentration = (uint16_t)(concentration * 128.0f);
   }
   return coded_concentration;
 }
 
 float short_to_cf(uint16_t coded_concentration) {
-  return (float)coded_concentration * 128.0f;
+  return (float)coded_concentration / 128.0f;
+}
+
+void unix_seconds_to_timestamp_22bits(uint32_t seconds, uint8_t ts24[]) {
+  uint32_t timestamp32;
+  if (seconds < k2019epoch) {
+    timestamp32 = 0;
+  } else {
+    timestamp32 = (seconds - k2019epoch) / kSecondsResolution;
+    timestamp32 &= 0x3FFFFF;  // forget bits of rank larger than 22!
+  }
+  memcpy(ts24, &timestamp32, 3);
+}
+
+void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
+  uint32_t timestamp32;
+  memcpy(&timestamp32, ts24, 3);
+  seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
 struct MeasurementData {
@@ -73,8 +88,8 @@ struct MeasurementData {
   uint16_t pm_2_5_short;
   uint16_t pm_10_0_short;
   uint16_t pressure_short;
-  uint8_t humidity_byte;
   uint8_t temperature_byte;
+  uint8_t humidity_byte;
   uint8_t quality_byte;
   uint8_t crc;
 };
@@ -88,6 +103,17 @@ class Measurement {
     Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity);
   }
 
+  Measurement(const MeasurementData &data) {
+    timestamp_22bits_to_unix_seconds(data.timestamp24, seconds_);
+    pm_1_0_cf_ = short_to_cf(data.pm_1_0_short);
+    pm_2_5_cf_ = short_to_cf(data.pm_2_5_short);
+    pm_10_0_cf_ = short_to_cf(data.pm_10_0_short);
+    pressure_ = short_to_mbar_pressure(data.pressure_short);
+    temperature_f_ = byte_to_temperature_f(data.temperature_byte);
+    humidity_ = data.humidity_byte;
+    pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
+  }
+
   void Set(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
            float pressure, int temperature, int humidity) {
     seconds_ = seconds;
@@ -95,34 +121,37 @@ class Measurement {
     pm_2_5_cf_ = pm_2_5;
     pm_10_0_cf_ = pm_10;
     pressure_ = pressure;
-    humidity_ = humidity;
-    pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
-    uint32_t timestamp32;
-    if (seconds_ < k2019epoch) {
-      timestamp32 = 0;
+    temperature_f_ = temperature;
+    if (humidity > 100) {
+      humidity_ = 100;
+    } else if (humidity < 0) {
+      humidity = 0;
     } else {
-      timestamp32 = (seconds - k2019epoch) / kSecondsResolution;
-      timestamp32 &= 0x3FFFFF;  // forget bits of rank larger than 22!
+      humidity_ = humidity;
     }
-    data_.timestamp24[0] = 0xFF && timestamp32;
-    data_.timestamp24[1] = (0xFF00 && timestamp32) >> 8;
-    data_.timestamp24[2] = (0xFF0000 && timestamp32) >> 16;
-    data_.pm_1_0_short = cf_to_short(pm_1_0_cf_);
-    data_.pm_2_5_short = cf_to_short(pm_2_5_cf_);
-    data_.pm_10_0_short = cf_to_short(pm_10_0_cf_);
-    data_.pressure_short = pressure_mbar_to_short(pressure);
+    pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
+  }
+
+  void SetData(MeasurementData &data) {
+    unix_seconds_to_timestamp_22bits(seconds_, data.timestamp24);
+    data.pm_1_0_short = cf_to_short(pm_1_0_cf_);
+    data.pm_2_5_short = cf_to_short(pm_2_5_cf_);
+    data.pm_10_0_short = cf_to_short(pm_10_0_cf_);
+    data.pressure_short = pressure_mbar_to_short(pressure_);
+    data.temperature_byte = temperature_f_to_byte(temperature_f_);
+    data.humidity_byte = humidity_;
+    data.crc = 0; // TOFIX !
   }
 
  protected:
-  MeasurementData data_;
   uint32_t seconds_;
   float pm_1_0_cf_;
   float pm_2_5_cf_;
   float pm_10_0_cf_;
   float pressure_;
-  float humidity_;
   int16_t temperature_f_;
   int16_t aqi_pm25_;
+  uint8_t humidity_;
   AqiLevel aqi_level_;
 };
 
