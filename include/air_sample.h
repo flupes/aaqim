@@ -82,6 +82,17 @@ void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
   seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
+void stats_to_byte(float nmae, uint8_t count, uint8_t &code) {
+  code = ( 0x0F & count ) << 4;
+  // let's assume that nmea was computed right and is positive! 
+  code |= 0x0F & (uint8_t)(nmae * 16.0);
+}
+
+void byte_to_stats(uint8_t code, float &nmae, uint8_t &count) {
+  count = code >> 4;
+  nmae = (float)(0x0F & code) / 16.0;
+}
+
 struct AirSampleData {
   uint8_t timestamp24[3];
   uint8_t reserved;
@@ -97,11 +108,11 @@ struct AirSampleData {
 
 class AirSample {
  public:
-  AirSample() { Set(k2019epoch, 0.0f, 0.0f, 0.0f, 1000.0f, 0, 0); }
+  AirSample() { Set(k2019epoch, 0.0f, 0.0f, 0.0f, 1000.0f, 0, 0, 0, 0.0f); }
 
   AirSample(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
-              float pressure, int temperature, int humidity) {
-    Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity);
+              float pressure, int temperature, int humidity, int count, float nmae) {
+    Set(seconds, pm_1_0, pm_2_5, pm_10, pressure, temperature, humidity, count, nmae);
   }
 
   AirSample(const AirSampleData &data) {
@@ -112,11 +123,12 @@ class AirSample {
     pressure_ = short_to_mbar_pressure(data.pressure_short);
     temperature_f_ = byte_to_temperature_f(data.temperature_byte);
     humidity_ = data.humidity_byte;
+    byte_to_stats(data.stats_byte, pm_2_5_nmae_, samples_count_);
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
   void Set(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
-           float pressure, int temperature, int humidity) {
+           float pressure, int temperature, int humidity, int count, float nmae) {
     seconds_ = seconds;
     pm_1_0_cf_ = pm_1_0;
     pm_2_5_cf_ = pm_2_5;
@@ -130,6 +142,8 @@ class AirSample {
     } else {
       humidity_ = humidity;
     }
+    samples_count_ = count;
+    pm_2_5_nmae_ = nmae;
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
@@ -141,6 +155,7 @@ class AirSample {
     data.pressure_short = pressure_mbar_to_short(pressure_);
     data.temperature_byte = temperature_f_to_byte(temperature_f_);
     data.humidity_byte = humidity_;
+    stats_to_byte(pm_2_5_nmae_, samples_count_, data.stats_byte);
     data.crc = 0;  // TOFIX !
   }
 

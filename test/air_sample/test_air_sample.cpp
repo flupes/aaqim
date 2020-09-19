@@ -39,6 +39,38 @@ void test_timestamp(void) {
   TEST_ASSERT_EQUAL_UINT32(now, seconds);
 }
 
+void test_stats(void) {
+  uint8_t code;
+  uint8_t count;
+  float nmae;
+
+  stats_to_byte(0.0f, 0, code);
+  byte_to_stats(code, nmae, count);
+  TEST_ASSERT_EQUAL_UINT8(0, count);
+  TEST_ASSERT_EQUAL_FLOAT(0.0, nmae);
+
+  stats_to_byte(2.0f, 20, code);
+  byte_to_stats(code, nmae, count);
+  TEST_ASSERT_EQUAL_UINT8(16, count);
+  TEST_ASSERT_EQUAL_FLOAT(1.0, nmae);
+
+  stats_to_byte(0.25f, 4, code);
+  byte_to_stats(code, nmae, count);
+  TEST_ASSERT_EQUAL_UINT8(4, count);
+  TEST_ASSERT_EQUAL_FLOAT(0.25f, nmae);
+
+  stats_to_byte(0.50f, 8, code);
+  byte_to_stats(code, nmae, count);
+  TEST_ASSERT_EQUAL_UINT8(8, count);
+  TEST_ASSERT_EQUAL_FLOAT(0.50f, nmae);
+
+  stats_to_byte(0.75f, 12, code);
+  byte_to_stats(code, nmae, count);
+  TEST_ASSERT_EQUAL_UINT8(12, count);
+  TEST_ASSERT_EQUAL_FLOAT(0.75f, nmae);
+
+}
+
 void test_data_structure(void) {
   uint32_t sz = sizeof(AirSampleData);
   TEST_ASSERT_EQUAL(kCompactedSampleSize, sz);
