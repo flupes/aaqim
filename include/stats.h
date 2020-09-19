@@ -1,3 +1,6 @@
+#ifndef AAQIM_STATS_H
+#define AAQIM_STATS_H
+
 #include <math.h>
 #include <stdint.h>
 
@@ -14,3 +17,5 @@ void mean_error(int size, const T data[], T &mean, float &nmae) {
   }
   nmae = error / (float)(sum);
 }
+
+#endif

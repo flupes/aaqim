@@ -1,3 +1,6 @@
+#ifndef AAQIM_CFAQI_H
+#define AAQIM_CFAQI_H
+
 #include <stdint.h>
 #include <math.h>
 
@@ -58,3 +61,5 @@ bool pm25_to_aqi(float pm, int16_t &aqiValue, AqiLevel &aqiLevel) {
 
   return valid;
 }
+
+#endif
