@@ -2,11 +2,17 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
 
+#include "B612Mono-Bold-18pt7b.h"
+#include "B612Mono-Bold-48pt7b.h"
+#include "Fonts/ClearSans-Bold-18pt7b.h"
+#include "Fonts/ClearSans-Bold-48pt7b.h"
 #include "Fonts/ClearSans-Medium-10pt7b.h"
 #include "Fonts/ClearSans-Medium-12pt7b.h"
 #include "Fonts/ClearSans-Medium-16pt7b.h"
 #include "Fonts/ClearSans-Medium-18pt7b.h"
 #include "Fonts/ClearSans-Medium-32pt7b.h"
+#include "Hack-Bold-18pt7b.h"
+#include "Hack-Bold-48pt7b.h"
 #include "epd2in7b.h"
 
 // Horrible bug in PlatformIO Forces to include these...
@@ -26,16 +32,11 @@ extern "C" char *sbrk(int i);
 
 enum class ColorBuffer : uint8_t { Black = 0, Red = 1 };
 
-uint16_t printText(const GFXfont *font, const char *str, ColorBuffer color,
-                   bool restart = false) {
-  static int16_t line = 0;
+static int16_t line = 0;
 
+uint16_t printText(const GFXfont *font, const char *str, ColorBuffer color) {
   int16_t x, y;
   uint16_t w, h;
-
-  if (restart) {
-    line = 0;
-  }
 
   uint8_t bufferId = static_cast<uint8_t>(color);
   canvas[bufferId]->setFont(font);
@@ -92,6 +93,27 @@ void setup() {
 
   epd.TransmitPartialBlack(canvas[0]->getBuffer(), 0, 0, EPD_WIDTH, EPD_HEIGHT);
   epd.TransmitPartialRed(canvas[1]->getBuffer(), 0, 0, EPD_WIDTH, EPD_HEIGHT);
+  epd.DisplayFrame();
+
+  delay(12 * 1000);
+
+  line = 0;
+  for (uint8_t i = 0; i < 2; i++) {
+    canvas[i]->fillScreen(UNCOLORED);
+  }
+  printText(&ClearSans_Bold18pt7b, short_str, static_cast<ColorBuffer>(0));
+  printText(&ClearSans_Bold48pt7b, short_str, static_cast<ColorBuffer>(0));
+  printText(&Hack_Bold18pt7b, short_str, static_cast<ColorBuffer>(0));
+  printText(&Hack_Bold48pt7b, short_str, static_cast<ColorBuffer>(0));
+  printText(&B612Mono_Bold18pt7b, short_str, static_cast<ColorBuffer>(0));
+  printText(&B612Mono_Bold48pt7b, short_str, static_cast<ColorBuffer>(0));
+  epd.TransmitPartial(canvas[0]->getBuffer(), canvas[1]->getBuffer(), 0, 0,
+                      EPD_WIDTH, EPD_HEIGHT);
+  epd.DisplayFrame();
+
+  delay(12 * 1000);
+  epd.TransmitPartial(canvas[1]->getBuffer(), canvas[0]->getBuffer(), 0, 0,
+                      EPD_WIDTH, EPD_HEIGHT);
   epd.DisplayFrame();
 
   Serial.println("Put display to sleep");
