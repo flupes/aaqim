@@ -5,18 +5,16 @@
 #include <ESP8266WiFiMulti.h>
 // #include <StreamUtils.h>
 
+#include "cfaqi.h"
 #include "credentials.h"
 #include "stats.h"
-#include "cfaqi.h"
 
 // how to:
 // https://arduinojson.org/v6/how-to/use-arduinojson-with-httpclient/
 
 ESP8266WiFiMulti wifiMulti;
 
-String request_str =
-    "http://www.purpleair.com/json?show=59927|65489|54857|36667|25301";
-// String request_str = "http://www.purpleair.com/json?show=59927";
+String request_str = "http://www.purpleair.com/json?show=59927|65489";
 
 void setup() {
   Serial.begin(115200);
@@ -108,10 +106,42 @@ void loop() {
       }
       Serial.print("  pm 2.5 cf = ");
       Serial.println(pm25cf);
+
+      String statsStr = sensor["Stats"];
+      Serial.println(statsStr);
+      JsonObject statsObj = sensor["Stats"].as<JsonObject>();
+      Serial.println(statsObj);
+      for (JsonPair kv : statsObj) {
+        Serial.print("key=");
+        Serial.print(kv.key().c_str());
+        Serial.print(" | val=");
+        Serial.println(kv.value().as<char*>());
+      }
+      // float v3 = sensor["Stats"]["v3"];
+      // Serial.print("v3 = ");
+      // Serial.println(v3);
     }
 
     // Disconnect
     http.end();
+
+    const char json[] =
+        "{\"v\":30.21,\"v1\":25.88,\"v2\":21.33,\"v3\":18.69,\"v4\":12.08,"
+        "\"v5\":16.86,\"v6\":43.87,\"pm\":30.21,\"lastModified\":1600574716224,"
+        "\"timeSinceModified\":120018}";
+    err = deserializeJson(doc, json);
+
+    // Test if parsing succeeds.
+    if (err) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(err.c_str());
+      return;
+    }
+    else {
+      float v3 = doc["v3"];
+      Serial.print("v3 = ");
+      Serial.println(v3);
+    }
 
     Serial.print("Number of readings = ");
     Serial.println(readingsCount);
