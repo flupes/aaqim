@@ -1,15 +1,20 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
 
 #include "credentials.h"
 #include "sensors.h"
+
+AirSensors sensors;
 
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
 
-  AirSensors sensors;
-  for (size_t i = 0; i < 3; i++) {
+  Serial.println("Initialize");
+  for (size_t i = 0; i < sizeof(kSensorIds)/sizeof(size_t); i++) {
     sensors.AddSensor(kSensorIds[i]);
   }
 
@@ -24,12 +29,18 @@ void setup() {
       timeout = true;
     }
   }
-  Serial.println();
-  if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
-    sensors.UpdateData(client, 0);
-    sensors.PrintData();
-  }
 }
 
-void loop() {}
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.println("WiFi Connected :-)");
+    WiFiClient client;
+    HTTPClient http;
+    Serial.println("Update data");
+    sensors.UpdateData(client, http);
+    Serial.println("List of sensors");
+    sensors.PrintAllData();
+  }
+  delay(30 * 1000);
+}
