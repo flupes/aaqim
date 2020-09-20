@@ -17,7 +17,7 @@ enum class AqiLevel : int8_t {
 };
 
 const char *AqiNames[AQI_LEVELS] = {
-    "Good",      "Moderate",       "Unhealthy For Sensitive Groups",
+    "Good",      "Moderate",       "Unhealthy for SG",
     "Unhealthy", "Very Unhealthy", "Hazardous"};
 
 const char *AqiColors[AQI_LEVELS] = {"Green", "Yellow", "Orange",
