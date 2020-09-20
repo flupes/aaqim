@@ -15,10 +15,6 @@
 #include "Hack-Bold-48pt7b.h"
 #include "epd2in7b.h"
 
-// Horrible bug in PlatformIO Forces to include these...
-#include <Adafruit_I2CDevice.h>
-#include <Wire.h>
-
 #define COLORED 1
 #define UNCOLORED 0
 

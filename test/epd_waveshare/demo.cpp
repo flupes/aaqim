@@ -29,10 +29,6 @@
 #include "imagedata.h"
 #include "epdpaint.h"
 
-// Horrible bug in PlatformIO Forces to include these...
-#include <Wire.h>
-#include <Adafruit_I2CDevice.h>
-
 #define COLORED     1
 #define UNCOLORED   0
 
