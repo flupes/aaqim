@@ -21,7 +21,7 @@ So this project relies on micro-controller with WiFi capabilities. This project 
 
 Not by design, but un-unsed parts from previous projects:
   - ESP8266 [Adafruit Huzzah](https://www.adafruit.com/product/2821)
-  - [2.7in E-paper Dislay](https://www.embeddedartists.com/products/2-7-inch-e-paper-display)
+  - [2.7in 3 colors E-paper Dislay](https://www.waveshare.com/product/displays/e-paper/epaper-2/2.7inch-e-paper-hat-b.htm)
   - LiPo battery (need to find one).
 
 
