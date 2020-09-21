@@ -1,0 +1,86 @@
+Init e-Paper...
+Looking for wifi scandone
+.....scandone
+state: 0 -> 2 (b0)
+.state: 2 -> 3 (0)
+state: 3 -> 5 (10)
+add 0
+aid 3
+cnt 
+
+connected with flupes-2g, channel 1
+dhcp client start...
+ip:172.16.0.164,mask:255.255.255.0,gw:172.16.0.1
+.
+
+WiFi Connected :-)
+Update data
+6
+Request URL = http://www.purpleair.com/json?show=59927|65489|67415|25301|54857|36667
+Retrieve data time (ms) = 164
+Memory heap before JSON doc = 34448
+Memory heap after JSON doc = 14440
+Deserialization (ms) = 222
+Parsing to structure (ms) = 2
+List of sensors
+Sensor # 59927
+  timestamp =   1600646716
+  age_A (min) = 0
+  age_B (min) = 0
+  pm_2_5_A =    22.79
+  pm_2_5_B =    23.05
+  temperature = 87
+  humidity =    31
+  pressure =    987.73
+Sensor # 65489
+  timestamp =   1600646735
+  age_A (min) = 0
+  age_B (min) = 0
+  pm_2_5_A =    23.07
+  pm_2_5_B =    23.45
+  temperature = 89
+  humidity =    26
+  pressure =    987.64
+Sensor # 67415
+  timestamp =   1600646749
+  age_A (min) = 0
+  age_B (min) = 0
+  pm_2_5_A =    35.51
+  pm_2_5_B =    32.22
+  temperature = 93
+  humidity =    23
+  pressure =    982.91
+Sensor # 25301
+  timestamp =   1600646672
+  age_A (min) = 1
+  age_B (min) = 1
+  pm_2_5_A =    29.88
+  pm_2_5_B =    29.39
+  temperature = 87
+  humidity =    30
+  pressure =    984.19
+Sensor # 54857
+  timestamp =   1600646759
+  age_A (min) = 0
+  age_B (min) = 0
+  pm_2_5_A =    36.95
+  pm_2_5_B =    34.60
+  temperature = 89
+  humidity =    28
+  pressure =    991.23
+Sensor # 36667
+  timestamp =   1600646736
+  age_A (min) = 0
+  age_B (min) = 0
+  pm_2_5_A =    25.48
+  pm_2_5_B =    33.27
+  temperature = 89
+  humidity =    25
+  pressure =    996.42
+Compute stats with n sensors = 5
+NMAE = 0.17
+Sep 20, 2020 - 17:05:16
+AQI = 87 --> Moderate
+NMEA = 0.17
+Put display to sleep
+Now go to sleep for 4 minutes
