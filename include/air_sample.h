@@ -1,12 +1,12 @@
 #ifndef AAQIM_AIR_SAMPLE_H
 #define AAQIM_AIR_SAMPLE_H
 
-#include <stdint.h>
-
 #include "cfaqi.h"
 
-static const uint32_t kCompactedSampleSize = 16;
-static const uint32_t kNaturalSampleSize = 32;
+#include <stdint.h>
+
+const uint32_t kCompactedSampleSize = 16;
+const uint32_t kNaturalSampleSize = 32;
 
 const uint32_t k2019epoch = 1546300800;  // Offset for compacted timestamps
 
@@ -45,7 +45,7 @@ uint8_t temperature_f_to_byte(int16_t temperature_f) {
 }
 
 int16_t byte_to_temperature_f(uint8_t coded_temperature) {
-  return (int16_t)(coded_temperature)+kTemperatureOffsetF;
+  return (int16_t)(coded_temperature) + kTemperatureOffsetF;
 }
 
 uint16_t cf_to_short(float concentration) {
@@ -171,7 +171,7 @@ class AirSample {
   float Pm_2_5_Nmae() { return pm_2_5_nmae_; }
   float PressureMbar() { return pressure_; }
   int16_t TemperatureF() { return temperature_f_; }
-  float TemperatureC() { return ((float)temperature_f_ - 32.0f)*5.0f/9.0f; }
+  float TemperatureC() { return ((float)temperature_f_ - 32.0f) * 5.0f / 9.0f; }
   int16_t AqiPm_2_5() { return aqi_pm25_; }
   uint8_t HumidityPercent() { return humidity_; }
   uint8_t SamplesCount() { return samples_count_; }
