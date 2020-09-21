@@ -175,6 +175,7 @@ class AirSample {
   int16_t AqiPm_2_5() { return aqi_pm25_; }
   uint8_t HumidityPercent() { return humidity_; }
   uint8_t SamplesCount() { return samples_count_; }
+  float NmaeValue() { return pm_2_5_nmae_; }
   AqiLevel Level() { return aqi_level_; }
 
  protected:
