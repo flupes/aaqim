@@ -116,7 +116,7 @@ void setup() {
       Serial.print(aqi);
       Serial.print(" --> ");
       Serial.println(AqiNames[static_cast<int>(sample.Level())]);
-      if ( aqi >= 100 ) {
+      if ( aqi > 100 ) {
         canvas[1]->fillRoundRect(7, 36, EPD_WIDTH-2*7, 68, 8, COLORED);
         canvas[1]->fillRoundRect(10, 39, EPD_WIDTH-2*10, 62, 4, UNCOLORED);
       }
