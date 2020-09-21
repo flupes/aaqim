@@ -10,7 +10,7 @@
 #include "stats.h"
 
 static const uint32_t kMaxReadingAgeSeconds = 12 * 60;
-static const float kMaxPercentDiscrepancy = 0.08;
+static const float kMaxPercentDiscrepancy = 0.05;
 
 size_t ComputeStats(const AirSensors& sensors, AirSample& sample) {
   short primary = -1;
