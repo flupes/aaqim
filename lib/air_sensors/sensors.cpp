@@ -3,11 +3,6 @@
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
 
-// Information about the Purple Aor API from:
-// https://www.purpleair.com/sensorlist
-// Look also at:
-// https://www2.purpleair.com/community/faq#!hc-json-object-fields
-
 // To test with 8 sensors collection:
 // http://www.purpleair.com/json?show=59927|65489|67415|25301|54857|36667|66029|54411
 // ArduinoJson Assistant says 19416 bytes
