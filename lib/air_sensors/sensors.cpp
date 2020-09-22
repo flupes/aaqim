@@ -40,9 +40,9 @@ bool AirSensors::UpdateData(WiFiClient &client, HTTPClient &http) {
   http.begin(client, url);
   http.GET();
   Serial.print("Retrieve data time (ms) = ");
-  Serial.println(millis()-start);
-  
-  return ( ParseSensors(http) > 0);
+  Serial.println(millis() - start);
+
+  return (ParseSensors(http) > 0);
 }
 
 void AirSensors::PrintSensorData(const SensorData &data) {
@@ -64,24 +64,33 @@ void AirSensors::PrintSensorData(const SensorData &data) {
   Serial.println(data.humidity);
   Serial.print("  pressure =    ");
   Serial.println(data.pressure);
+  Serial.print("  stats = [ ");
+  for (short i = 0; i < PmAvgIndexes::PmAvgSize; i++) {
+    if ( i > 0 ) {
+      Serial.print(" | ");
+    }
+    Serial.print(data.averages[i]);
+  }
+  Serial.println(" ]");
 }
 
-size_t AirSensors::ParseSensors(HTTPClient& http) {
+size_t AirSensors::ParseSensors(HTTPClient &http) {
   Serial.print("Memory heap before JSON doc = ");
   Serial.println(ESP.getFreeHeap());
   DynamicJsonDocument doc(kJsonCapacity);
+  StaticJsonDocument<400> subdoc;
   Serial.print("Memory heap after JSON doc = ");
   Serial.println(ESP.getFreeHeap());
 
   unsigned long start = millis();
   auto err = deserializeJson(doc, http.getStream());
   if (err) {
-    Serial.print(F("deserializeJson() returned "));
+    Serial.print("Error, doc deserializeJson() returned ");
     Serial.println(err.c_str());
   }
   unsigned long step = millis();
   Serial.print("Deserialization (ms) = ");
-  Serial.println(step-start);
+  Serial.println(step - start);
 
   // Array of sensors
   JsonArray sensorsArray = doc["results"].as<JsonArray>();
@@ -104,6 +113,18 @@ size_t AirSensors::ParseSensors(HTTPClient& http) {
         sensorsData_[index].humidity = sensor["humidity"];
         sensorsData_[index].pressure = sensor["pressure"];
         primaryCount++;
+        // Extract statistics
+        auto result = deserializeJson(subdoc, sensor["Stats"]);
+        if (result) {
+          Serial.print("Error, subdoc deserialization returned ");
+          Serial.println(result.c_str());
+        } else {
+          for (short i = 0; i < PmAvgIndexes::PmAvgSize; i++) {
+            char key[3];
+            sprintf(key, "v%d", i + 1);
+            sensorsData_[index].averages[i] = subdoc[key];
+          }
+        }
       }
     } else {
       index = GetSensorIndex(parent);
@@ -114,7 +135,7 @@ size_t AirSensors::ParseSensors(HTTPClient& http) {
 
   unsigned long stop = millis();
   Serial.print("Parsing to structure (ms) = ");
-  Serial.println(stop-step);
- 
+  Serial.println(stop - step);
+
   return primaryCount;
 }

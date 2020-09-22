@@ -12,12 +12,23 @@ const size_t kMaxSensors = 8;
 // Purple air sensors ID by priority.
 static const size_t kSensorIds[] = {59927, 65489, 67415, 25301, 54857, 36667};
 
+enum PmAvgIndexes {
+  TenMinutes,
+  ThirtyMinutes,
+  OneHour,
+  SixHours,
+  TwentyFourHours,
+  OneWeek,
+  PmAvgSize
+};
+
 struct SensorData {
   size_t id;
   uint32_t timestamp;
   float pm_2_5_A;
   float pm_2_5_B;
   float pressure;
+  float averages[PmAvgIndexes::PmAvgSize];
   int16_t age_A;
   int16_t age_B;
   int16_t temperature;
