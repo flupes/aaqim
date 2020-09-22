@@ -42,7 +42,9 @@ Not by design, just un-unsed parts from previous projects:
     - This was before I selected SAMD21 boards instead. Still, the ESP8266 seems
       a interesting solution for super low cost projects.
   - [2.7in 3 colors E-paper Dislay](https://www.waveshare.com/product/displays/e-paper/epaper-2/2.7inch-e-paper-hat-b.htm)
-    - I was initially attracted by the Black + Red capabilities of the panel, but refresh time was too slow (~20s) for ultra-low power projects like [DigiBaro](https://github.com/flupes/digibaro2).
+    - I was initially attracted by the Black + Red capabilities of the panel,
+    but refresh time was too slow (~20s) for ultra-low power projects like
+    [DigiBaro](https://github.com/flupes/digibaro2/blob/master/README.md).
   - LiPo battery.
 
 
