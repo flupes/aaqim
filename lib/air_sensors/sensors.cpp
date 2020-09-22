@@ -16,6 +16,11 @@ static const size_t kJsonCapacity = 20000;
 static const char *kPurpleAirUrl = "http://www.purpleair.com/";
 static const char *kPurpleAirRequest = "json?show=";
 
+// by observing the PA map, it looks like pm2_5_cf_1 and pm2_5_atm are
+// quite different in certain ranges. *_atm seems to be calibrated for
+// outdoor and is reflected in PM2_5Value.
+static const char *kPm2_5_key = "PM2_5Value";
+
 bool AirSensors::UpdateData(WiFiClient &client, HTTPClient &http) {
   String url = String(kPurpleAirUrl) + String(kPurpleAirRequest);
   Serial.println(sensorsCount_);
@@ -93,7 +98,7 @@ size_t AirSensors::ParseSensors(HTTPClient& http) {
       if (index < kMaxSensors) {
         sensorsData_[index].id = sid;
         sensorsData_[index].timestamp = sensor["LastSeen"];
-        sensorsData_[index].pm_2_5_A = sensor["pm2_5_cf_1"];
+        sensorsData_[index].pm_2_5_A = sensor[kPm2_5_key];
         sensorsData_[index].age_A = sensor["AGE"];
         sensorsData_[index].temperature = sensor["temp_f"];
         sensorsData_[index].humidity = sensor["humidity"];
@@ -102,7 +107,7 @@ size_t AirSensors::ParseSensors(HTTPClient& http) {
       }
     } else {
       index = GetSensorIndex(parent);
-      sensorsData_[index].pm_2_5_B = sensor["pm2_5_cf_1"];
+      sensorsData_[index].pm_2_5_B = sensor[kPm2_5_key];
       sensorsData_[index].age_B = sensor["AGE"];
     }
   }
