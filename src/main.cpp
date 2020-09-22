@@ -134,17 +134,19 @@ void setup() {
         canvas[1]->fillRoundRect(34, 164, EPD_WIDTH-2*34, 24, 6, COLORED);
         canvas[1]->fillRoundRect(36, 166, EPD_WIDTH-2*36, 20, 4, UNCOLORED);
       }
-      String stats = String("err=") +
-                     String(nmae * 100.0f, 0) + String("%");
-      CenterText(&ClearSans_Medium12pt7b, stats.c_str(), 182);
+      char error[16];
+      sprintf(error, "err=%d%%", (int)(roundf(nmae*100.0f)));
+      CenterText(&ClearSans_Medium12pt7b, error, 182);
 
     } else {
-      Serial.println("No valid air sample retrieved :-(");
+      Serial.println("No valid air sample retrieved :-/");
+      CenterText(&ClearSans_Medium18pt7b, "No Data :-/", 132);
     }
 
   } else {
     // not connected, too bad :-(
     Serial.println("Could not connected to WiFi :-(");
+    CenterText(&ClearSans_Medium18pt7b, "No WiFi :-(", 132);
   }
 
   epd.TransmitPartial(canvas[0]->getBuffer(), canvas[1]->getBuffer(), 0, 0,
