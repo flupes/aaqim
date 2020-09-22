@@ -9,8 +9,14 @@
 #include "sensors.h"
 #include "stats.h"
 
-static const uint32_t kMaxReadingAgeSeconds = 12 * 60;
-static const float kMaxPercentDiscrepancy = 0.05;
+// PA sensors seem to be updated every two minutes.
+// We consider the sensor valid even if we miss two beats
+static const uint32_t kMaxReadingAgeMinutes = 5;
+
+// PA report 100% confidence when the two readings of one station
+// are within 6%. So we should still accept these, but will 
+// discard the sensor if higher (not sure at what point PA confidence decreases)
+static const float kMaxPercentDiscrepancy = 0.06;
 
 size_t ComputeStats(const AirSensors& sensors, AirSample& sample) {
   short primary = -1;
@@ -22,13 +28,13 @@ size_t ComputeStats(const AirSensors& sensors, AirSample& sample) {
 
     // check age
     if (data.age_A > 5 || data.age_B > 5 || abs(data.age_A - data.age_B) > 15) {
-      break;
+      continue;
     }
 
     // check sensors consistency
     if (fabs(data.pm_2_5_A - data.pm_2_5_B) / (data.pm_2_5_A + data.pm_2_5_B) >
         kMaxPercentDiscrepancy) {
-      break;
+      continue;
     }
 
     // keep which sensor is considered the primary one
