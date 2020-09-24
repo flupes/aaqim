@@ -23,6 +23,10 @@
 Epd epd;
 GFXcanvas1 *canvas[2];
 
+// Use the AD converted of the ESP8266 to read the chip supply
+// voltage (instean of the analog input pin)
+ADC_MODE(ADC_VCC);
+
 const time_t kTimeZoneOffsetSeconds = -7 * 3600;
 
 enum class ColorBuffer : uint8_t { Black = 0, Red = 1 };
@@ -107,6 +111,11 @@ void setup() {
     AirSample sample;
     int32_t primaryIndex;
     size_t nbSamples = ComputeStats(sensors, sample, primaryIndex);
+#if 0
+    // Photo Op only :-)
+    sample.Set(sample.Seconds(), 0.0, 98.1, 0.0, 0.0, 0, 0, sample.SamplesCount(), sample.Pm_2_5_Nmae());
+#endif
+
     if (nbSamples > 0) {
       time_t seconds = sample.Seconds() + kTimeZoneOffsetSeconds;
       tm *local = gmtime(&seconds);
@@ -141,12 +150,13 @@ void setup() {
       sprintf(msg, "%d sensors (#%d)", sample.SamplesCount(), primaryIndex + 1);
       CenterText(&ClearSans_Medium12pt7b, msg, 160);
 
-      float nmae = sample.NmaeValue();
-      if (nmae > 2.0 * kMaxPercentDiscrepancy) {
+      float maePercent = sample.MaeValue() / 500.0;
+      if (maePercent > 3.0) {
         canvas[1]->fillRoundRect(34, 164, EPD_WIDTH - 2 * 34, 24, 6, COLORED);
         canvas[1]->fillRoundRect(36, 166, EPD_WIDTH - 2 * 36, 20, 4, UNCOLORED);
       }
-      sprintf(msg, "err=%d%%", (int)(roundf(nmae * 100.0f)));
+      // sprintf(msg, "err=%d%%", (int)(roundf(nmae * 100.0f)));
+      sprintf(msg, "err=%.1f%%", maePercent);
       CenterText(&ClearSans_Medium12pt7b, msg, 182);
 
       SensorData data = sensors.Data(primaryIndex);
@@ -167,7 +177,13 @@ void setup() {
       sprintf(msg, "1h=%d / 6h=%d", value1h, value6h);
       CenterText(&ClearSans_Medium12pt7b, msg, 228);
 
-      sprintf(msg, "avg. 24h = %d", value24h);
+      // sprintf(msg, "avg. 24h = %d", value24h);
+      // CenterText(&ClearSans_Medium12pt7b, msg, 248);
+
+      uint16_t vcc = ESP.getVcc();
+      Serial.print("VCC = ");
+      Serial.println(vcc);
+      sprintf(msg, "vcc = %d mV", vcc);
       CenterText(&ClearSans_Medium12pt7b, msg, 248);
 
     } else {
@@ -200,8 +216,8 @@ void setup() {
   Serial.print("Memory potentially leaked = ");
   Serial.println(startHeap - sleepHeap);
 
-  Serial.println("Now go to sleep for 4 minutes");
-  ESP.deepSleep(4 * 60 * 1E6);
+  Serial.println("Now go to sleep for 5 minutes");
+  ESP.deepSleep(5 * 60 * 1E6);
 }
 
 void loop() {}
