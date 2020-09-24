@@ -113,7 +113,7 @@ void setup() {
     size_t nbSamples = ComputeStats(sensors, sample, primaryIndex);
 #if 0
     // Photo Op only :-)
-    sample.Set(sample.Seconds(), 0.0, 98.1, 0.0, 0.0, 0, 0, sample.SamplesCount(), sample.Pm_2_5_Nmae());
+    sample.Set(sample.Seconds(), 0.0, 98.1, 0.0, 0.0, 0, 0, sample.SamplesCount(), 30.0);
 #endif
 
     if (nbSamples > 0) {
@@ -137,7 +137,7 @@ void setup() {
       Serial.print(" --> ");
       Serial.println(AqiNames[static_cast<int>(sample.Level())]);
       if (aqi > 100) {
-        canvas[1]->fillRoundRect(7, 36, EPD_WIDTH - 2 * 7, 68, 8, COLORED);
+        canvas[1]->fillRoundRect(6, 35, EPD_WIDTH - 2 * 6, 70, 8, COLORED);
         canvas[1]->fillRoundRect(10, 39, EPD_WIDTH - 2 * 10, 62, 4, UNCOLORED);
       }
       String aqiValue(aqi);
@@ -147,17 +147,16 @@ void setup() {
       CenterText(&ClearSans_Medium18pt7b, aqiName.c_str(), 132);
 
       char msg[16];
-      sprintf(msg, "%d sensors (#%d)", sample.SamplesCount(), primaryIndex + 1);
-      CenterText(&ClearSans_Medium12pt7b, msg, 160);
-
-      float maePercent = sample.MaeValue() / 500.0;
-      if (maePercent > 3.0) {
-        canvas[1]->fillRoundRect(34, 164, EPD_WIDTH - 2 * 34, 24, 6, COLORED);
-        canvas[1]->fillRoundRect(36, 166, EPD_WIDTH - 2 * 36, 20, 4, UNCOLORED);
+      float mae = sample.MaeValue();
+      if (mae > 15.0) {
+        canvas[1]->fillRoundRect(28, 140, EPD_WIDTH - 2 * 28, 24, 6, COLORED);
+        canvas[1]->fillRoundRect(30, 142, EPD_WIDTH - 2 * 30, 20, 4, UNCOLORED);
       }
-      // sprintf(msg, "err=%d%%", (int)(roundf(nmae * 100.0f)));
-      sprintf(msg, "err=%.1f%%", maePercent);
-      CenterText(&ClearSans_Medium12pt7b, msg, 182);
+      sprintf(msg, "MAE = %.1f", sample.MaeValue());
+      CenterText(&ClearSans_Medium12pt7b, msg, 158);
+
+      sprintf(msg, "%d sensors (#%d)", sample.SamplesCount(), primaryIndex + 1);
+      CenterText(&ClearSans_Medium12pt7b, msg, 184);
 
       SensorData data = sensors.Data(primaryIndex);
       int16_t value30m, value1h, value6h, value24h;
