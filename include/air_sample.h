@@ -1,9 +1,9 @@
 #ifndef AAQIM_AIR_SAMPLE_H
 #define AAQIM_AIR_SAMPLE_H
 
-#include "cfaqi.h"
-
 #include <stdint.h>
+
+#include "cfaqi.h"
 
 const uint32_t kCompactedSampleSize = 16;
 const uint32_t kNaturalSampleSize = 32;
@@ -84,15 +84,27 @@ void timestamp_22bits_to_unix_seconds(const uint8_t ts24[], uint32_t &seconds) {
   seconds = timestamp32 * kSecondsResolution + k2019epoch;
 }
 
-void stats_to_byte(float nmae, uint8_t count, uint8_t &code) {
-  code = (0x0F & count) << 4;
-  // let's assume that nmea was computed right and is positive!
-  code |= 0x0F & (uint8_t)(nmae * 16.0);
+/* Code both sensor count and mae on a single byte.
+  Warning: count should be in the range [1 .. 8] (zero not valid)!
+  */
+void stats_to_byte(float mae, uint8_t count, uint8_t &code) {
+  if (count > 8) {
+    count = 8;
+  }
+  // We assume that a sample should not be created if zero sensors were
+  // available! if count = 0, then the encoding will be wrong :-(
+  code = (0x0F & (count - 1)) << 5;
+  // Let's use a resolution of 2 AQI units, which would let encode a MAE up
+  // to 65 on 5 bits.
+  if (mae > 63.0) {
+    mae = 63.0;
+  }
+  code |= 0x1F & static_cast<uint8_t>(roundf((mae - 0.01) / 2.0));
 }
 
-void byte_to_stats(uint8_t code, float &nmae, uint8_t &count) {
-  count = code >> 4;
-  nmae = (float)(0x0F & code) / 16.0;
+void byte_to_stats(uint8_t code, float &mae, uint8_t &count) {
+  count = 1 + (code >> 5);
+  mae = (float)(0x1F & code) * 2.0;
 }
 
 struct AirSampleData {
@@ -104,7 +116,7 @@ struct AirSampleData {
   uint16_t pressure_short;
   uint8_t temperature_byte;
   uint8_t humidity_byte;
-  uint8_t stats_byte;
+  uint8_t stats_byte;  // 3 bits for sample count + 5 bits for mae
   uint8_t crc;
 };
 
@@ -127,7 +139,7 @@ class AirSample {
     pressure_ = short_to_mbar_pressure(data.pressure_short);
     temperature_f_ = byte_to_temperature_f(data.temperature_byte);
     humidity_ = data.humidity_byte;
-    byte_to_stats(data.stats_byte, pm_2_5_nmae_, samples_count_);
+    byte_to_stats(data.stats_byte, pm_2_5_mae_, samples_count_);
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
@@ -148,7 +160,7 @@ class AirSample {
       humidity_ = humidity;
     }
     samples_count_ = count;
-    pm_2_5_nmae_ = nmae;
+    pm_2_5_mae_ = nmae;
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
@@ -160,7 +172,7 @@ class AirSample {
     data.pressure_short = pressure_mbar_to_short(pressure_);
     data.temperature_byte = temperature_f_to_byte(temperature_f_);
     data.humidity_byte = humidity_;
-    stats_to_byte(pm_2_5_nmae_, samples_count_, data.stats_byte);
+    stats_to_byte(pm_2_5_mae_, samples_count_, data.stats_byte);
     data.crc = 0;  // TOFIX !
   }
 
@@ -168,14 +180,14 @@ class AirSample {
   float Pm_1_0() { return pm_1_0_cf_; }
   float Pm_2_5() { return pm_2_5_cf_; }
   float Pm_10_0() { return pm_10_0_cf_; }
-  float Pm_2_5_Nmae() { return pm_2_5_nmae_; }
+  float Pm_2_5_Nmae() { return pm_2_5_mae_; }
   float PressureMbar() { return pressure_; }
   int16_t TemperatureF() { return temperature_f_; }
   float TemperatureC() { return ((float)temperature_f_ - 32.0f) * 5.0f / 9.0f; }
   int16_t AqiPm_2_5() { return aqi_pm25_; }
   uint8_t HumidityPercent() { return humidity_; }
   uint8_t SamplesCount() { return samples_count_; }
-  float NmaeValue() { return pm_2_5_nmae_; }
+  float MaeValue() { return pm_2_5_mae_; }
   AqiLevel Level() { return aqi_level_; }
 
  protected:
@@ -183,7 +195,7 @@ class AirSample {
   float pm_1_0_cf_;
   float pm_2_5_cf_;
   float pm_10_0_cf_;
-  float pm_2_5_nmae_;
+  float pm_2_5_mae_;
   float pressure_;
   int16_t temperature_f_;
   int16_t aqi_pm25_;

@@ -4,28 +4,31 @@
 
 void test_avg_float_1(void) {
     const float data[] = {1.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0 };
-    float avg;
+    float mae;
     float nmae;
-    mean_error(7, data, avg, nmae);
+    float avg = mean_error(7, data, mae, nmae);
     TEST_ASSERT_EQUAL_FLOAT(3.0, avg);
+    TEST_ASSERT_EQUAL_FLOAT(6.0/7.0, mae);
     TEST_ASSERT_EQUAL_FLOAT(0.2857143, nmae);
 }
 
 void test_avg_float_100(void) {
     const float data[] = {100.0, 200.0, 300.0, 300.0, 300.0, 400.0, 500.0 };
-    float avg;
+    float mae;
     float nmae;
-    mean_error(7, data, avg, nmae);
+    float avg = mean_error(7, data, mae, nmae);
     TEST_ASSERT_EQUAL_FLOAT(300.0, avg);
+    TEST_ASSERT_EQUAL_FLOAT(600.0/7.0, mae);
     TEST_ASSERT_EQUAL_FLOAT(0.2857143, nmae);
 }
 
 void test_avg_int_10(void) {
     const int data[] = {10, 20, 30, 30, 30, 40, 50 };
-    int avg;
+    int mae;
     float nmae;
-    mean_error(7, data, avg, nmae);
-    TEST_ASSERT_EQUAL_FLOAT(30, avg);
+    int avg = mean_error(7, data, mae, nmae);
+    TEST_ASSERT_EQUAL_INT(30, avg);
+    TEST_ASSERT_EQUAL_INT(60/7, mae);
     TEST_ASSERT_EQUAL_FLOAT(0.2857143, nmae);
 }
 
@@ -45,4 +48,3 @@ int main(int argc, char **argv) {
 #if defined(ARDUINO)
 void loop() {}
 #endif
-

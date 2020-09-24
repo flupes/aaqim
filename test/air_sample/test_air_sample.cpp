@@ -42,32 +42,32 @@ void test_timestamp(void) {
 void test_stats(void) {
   uint8_t code;
   uint8_t count;
-  float nmae;
+  float mae;
 
-  stats_to_byte(0.0f, 0, code);
-  byte_to_stats(code, nmae, count);
-  TEST_ASSERT_EQUAL_UINT8(0, count);
-  TEST_ASSERT_EQUAL_FLOAT(0.0, nmae);
+  stats_to_byte(0.0f, 1, code);
+  byte_to_stats(code, mae, count);
+  TEST_ASSERT_EQUAL_UINT8(1, count);
+  TEST_ASSERT_EQUAL_FLOAT(0.0, mae);
 
-  stats_to_byte(2.0f, 20, code);
-  byte_to_stats(code, nmae, count);
-  TEST_ASSERT_EQUAL_UINT8(16, count);
-  TEST_ASSERT_EQUAL_FLOAT(1.0, nmae);
-
-  stats_to_byte(0.25f, 4, code);
-  byte_to_stats(code, nmae, count);
-  TEST_ASSERT_EQUAL_UINT8(4, count);
-  TEST_ASSERT_EQUAL_FLOAT(0.25f, nmae);
-
-  stats_to_byte(0.50f, 8, code);
-  byte_to_stats(code, nmae, count);
+  stats_to_byte(63.0f, 10, code);
+  byte_to_stats(code, mae, count);
   TEST_ASSERT_EQUAL_UINT8(8, count);
-  TEST_ASSERT_EQUAL_FLOAT(0.50f, nmae);
+  TEST_ASSERT_EQUAL_FLOAT(62.0, mae);
 
-  stats_to_byte(0.75f, 12, code);
-  byte_to_stats(code, nmae, count);
-  TEST_ASSERT_EQUAL_UINT8(12, count);
-  TEST_ASSERT_EQUAL_FLOAT(0.75f, nmae);
+  stats_to_byte(9.5f, 2, code);
+  byte_to_stats(code, mae, count);
+  TEST_ASSERT_EQUAL_UINT8(2, count);
+  TEST_ASSERT_EQUAL_FLOAT(10.0f, mae);
+
+  stats_to_byte(31.0f, 6, code);
+  byte_to_stats(code, mae, count);
+  TEST_ASSERT_EQUAL_UINT8(6, count);
+  TEST_ASSERT_EQUAL_FLOAT(30.0f, mae);
+
+  stats_to_byte(62.0f, 8, code);
+  byte_to_stats(code, mae, count);
+  TEST_ASSERT_EQUAL_UINT8(8, count);
+  TEST_ASSERT_EQUAL_FLOAT(62.0f, mae);
 
 }
 
@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
   RUN_TEST(test_temperature);
   RUN_TEST(test_concentration);
   RUN_TEST(test_timestamp);
+  RUN_TEST(test_stats);
   RUN_TEST(test_data_structure);
   UNITY_END();
 }
