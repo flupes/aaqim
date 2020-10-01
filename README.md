@@ -38,6 +38,11 @@ consume current only when it needs to be updated. Since air quality is a slow
 evolving parameter, the board and panel are simply stopped between updates,
 leading to a very low power solution.
 
+## Details
+
+  - [Some notes on the design](./design.md) (work in progress regarding the flash use)
+  - [Hardware related info](./hardware.md) (power consumption numbers to come)
+
 ## Bill of Material
 
 Not by design, just un-unsed parts from previous projects:
