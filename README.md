@@ -1,7 +1,10 @@
 # aaqim = Arduino AQI Monitor
 
-Simple Air Quality Monitor using data collected from the web. Based on an
-ESP8266 and E-paper display.
+Simple Air Quality Monitor using data collected from the **web** (no local sensor).
+
+Based on an ESP8266 and E-paper display.
+
+<img src="./aaqim-system.jpg" alt="AAQIM System" width="75%">
 
 This is not a general, multi-purpose code base, but a quick hack for personal
 use.
@@ -26,8 +29,8 @@ The next best option is then to use the data already available. There are more
 than 15 Purple Air stations in a 500m diameter circle around my house, so it is
 possible to get data localized enough to be relevant. The next requirement for
 me was to create a low power solution: I would prefer to not contribute more to
-the global warming just for my personal convinience. So a typical trivial
-solution relying on a Raspberry Pi single board computer is not considered here.
+the global warming just for my personal convinience. So a typical solution
+relying on a Raspberry Pi single board computer is not considered here.
 
 This project relies on micro-controller with WiFi capabilities to collect other
 people sensor data. The display is based on a E-Paper panel that does not
