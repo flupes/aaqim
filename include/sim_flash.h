@@ -1,7 +1,8 @@
 #ifndef AAQIM_SIM_FLASH_H
 #define AAQIM_SIM_FLASH_H
 
-#include <stdint.h>
+#include "abstract_flash.h"
+
 #include <string.h>
 
 #if !defined(ARDUINO)
@@ -11,9 +12,9 @@ const uint32_t SPI_FLASH_SEC_SIZE = 0x1000;
 const uint32_t FS_PHYS_ADDR = 0x03000000;
 const uint32_t FS_PHYS_SIZE = 0x000FA000;
 
-class SimEspFlash {
+class SimFlash : public AbstractFlash {
  public:
-  SimEspFlash() {
+  SimFlash() {
     for (uint32_t i = 0; i < FS_PHYS_SIZE; i++) {
       memory_[i] = 0xFF;
     }

@@ -1,17 +1,13 @@
-#if defined(ARDUINO)
-#include <Arduino.h>
-#include <flash_hal.h>
-#define FLASH_TYPE EspClass
-#define FLASH_INSTANCE ESP
-#else
-#include "sim_flash.h"
-SimEspFlash gSimFlash;
-#define FLASH_TYPE SimEspFlash
-#define FLASH_INSTANCE gSimFlash
-#endif
-
 #include "flash_samples.h"
 #include "unity.h"
+
+#if defined(ARDUINO)
+EspFlash gFlash;
+#else
+#include "sim_flash.h"
+SimFlash gFlash;
+#endif
+
 
 const uint32_t kFlashOffset = 0x000A0000;
 const uint32_t kNumberOfSectorToUse = 3;
@@ -21,7 +17,7 @@ const size_t kMaxSampleLength = kBytesToAllocate / kSampleSize;
 const size_t kSamplesPerSector = SPI_FLASH_SEC_SIZE / kSampleSize;
 
 void TestUnaligned() {
-  FlashSamples<FLASH_TYPE, uint64_t> unaligned(FLASH_INSTANCE, kMaxSampleLength - 256, kFlashOffset - 512);
+  FlashSamples<uint64_t> unaligned(gFlash, kMaxSampleLength - 256, kFlashOffset - 512);
 
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset, unaligned.FlashStorageStart());
   TEST_ASSERT_EQUAL(kBytesToAllocate, unaligned.FlashStorageLength());
@@ -31,7 +27,7 @@ void TestUnaligned() {
 }
 
 void TestAligned() {
-  FlashSamples<FLASH_TYPE, uint64_t> aligned(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> aligned(gFlash, kMaxSampleLength, kFlashOffset);
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset, aligned.FlashStorageStart());
   TEST_ASSERT_EQUAL(kBytesToAllocate, aligned.FlashStorageLength());
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset + kBytesToAllocate,
@@ -42,7 +38,7 @@ void TestAligned() {
 }
 
 void TestErase() {
-  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> samples(gFlash, kMaxSampleLength, kFlashOffset);
   samples.Begin(true);
   TEST_ASSERT_TRUE(samples.IsScanned());
   TEST_ASSERT_TRUE(samples.IsEmpty());
@@ -51,7 +47,7 @@ void TestErase() {
 }
 
 void TestWriteOnEmptyFirstSector() {
-  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> samples(gFlash, kMaxSampleLength, kFlashOffset);
   TEST_ASSERT_EQUAL(UINT32_MAX, samples.NumberOfSamples());
   samples.Begin();
   TEST_ASSERT_TRUE(samples.IsEmpty());
@@ -81,7 +77,7 @@ void TestWriteOnEmptyFirstSector() {
 }
 
 void TestWriteOnSecondSector() {
-  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> samples(gFlash, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
   TEST_ASSERT_EQUAL(kSamplesPerSector, samples.NumberOfSamples());
@@ -113,7 +109,7 @@ void TestWriteOnSecondSector() {
 }
 
 void TestWriteOnThirdSector() {
-  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> samples(gFlash, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
   TEST_ASSERT_EQUAL(2 * kSamplesPerSector, samples.NumberOfSamples());
@@ -158,7 +154,7 @@ void TestWriteOnThirdSector() {
 }
 
 void TestWriteAgainOnFirstAndSecond() {
-  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
+  FlashSamples<uint64_t> samples(gFlash, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
 

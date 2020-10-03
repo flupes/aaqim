@@ -1,15 +1,17 @@
 #ifndef AAQIM_FLASH_SAMPLES_H
 #define AAQIM_FLASH_SAMPLES_H
 
+#include "abstract_flash.h"
+
 #if defined(ARDUINO)
 #include <Arduino.h>
 #include <flash_hal.h>
+#include <spi_flash.h>
 #else
 #include <stdio.h>
 #include "sim_flash.h"
 #endif
 
-#include <stdint.h>
 #include <stdlib.h>
 
 /**
@@ -24,9 +26,14 @@
  * System, and allow easy access to the indexed samples.
  *
  * The class is not resilient to multiple instanciantion, so use with care!
- *
+ * 
+ * The class needs to be passed a concrete version of AbstractFlash.
+ *   - ESP : use the EspFlash defined at the end of this file
+ *   - native : use SimFlash from "sim_flash.h"
+ * See the `test_flash_samples` unit test for a concrete example on how to
+ * use on both ESP and native.
  */
-template <typename F, typename T>
+template <typename T>
 class FlashSamples {
  public:
   /** Declare the flash accessor.
@@ -38,7 +45,8 @@ class FlashSamples {
    * stored at the begining of the ESP8266 filesystem flash area.
    */
 
-  FlashSamples(F& flash, size_t samplesLength, uint32_t startOffset = 0);
+  FlashSamples(AbstractFlash& flash, size_t samplesLength,
+               uint32_t startOffset = 0);
 
   /** Retrieve the first/last sample addresses on the existing storage.
    *
@@ -110,7 +118,7 @@ class FlashSamples {
   void Info();
 
  protected:
-  F& flash_;
+  AbstractFlash& flash_;
 
   uint32_t WrapAddress(uint32_t addr) {
     if (addr >= FlashStorageEnd()) {
@@ -133,8 +141,8 @@ class FlashSamples {
   bool empty_;   /** Is the flash area empty */
 };
 
-template <typename F, typename T>
-FlashSamples<F, T>::FlashSamples(F& flash, size_t samplesLength,
+template <typename T>
+FlashSamples<T>::FlashSamples(AbstractFlash& flash, size_t samplesLength,
                               uint32_t startOffset)
     : flash_(flash),
       sampleSize_(sizeof(T)),
@@ -176,8 +184,8 @@ FlashSamples<F, T>::FlashSamples(F& flash, size_t samplesLength,
   lastSampleAddr_ = UINT32_MAX;
 }
 
-template <typename F, typename T>
-void FlashSamples<F, T>::Begin(bool erase) {
+template <typename T>
+void FlashSamples<T>::Begin(bool erase) {
   // For some debug scenarios, we may want to clear the flash first!
   if (erase) {
     uint32_t sector = flashStorageStart_ / flashSectorSize_;
@@ -219,8 +227,8 @@ void FlashSamples<F, T>::Begin(bool erase) {
   scanned_ = true;
 }
 
-template <typename F, typename T>
-size_t FlashSamples<F, T>::NumberOfSamples() {
+template <typename T>
+size_t FlashSamples<T>::NumberOfSamples() {
   uint32_t count = UINT32_MAX;
   if (scanned_) {
     // Only if flash has been scanned properly
@@ -239,8 +247,8 @@ size_t FlashSamples<F, T>::NumberOfSamples() {
   return count;
 }
 
-template <typename F, typename T>
-bool FlashSamples<F, T>::ReadSample(size_t index, T& data) {
+template <typename T>
+bool FlashSamples<T>::ReadSample(size_t index, T& data) {
   if (index > NumberOfSamples() - 1) {
     return false;
   }
@@ -252,8 +260,8 @@ bool FlashSamples<F, T>::ReadSample(size_t index, T& data) {
   return flash_.flashRead(addr, ptr, sampleSize_);
 }
 
-template <typename F, typename T>
-bool FlashSamples<F, T>::StoreSample(const T& data) {
+template <typename T>
+bool FlashSamples<T>::StoreSample(const T& data) {
   uint8_t status = 0;
   // Handle empty flash versus non-empty
   if (empty_) {
@@ -269,7 +277,6 @@ bool FlashSamples<F, T>::StoreSample(const T& data) {
   uint32_t* ptr = (uint32_t*)(&data);
   bool result = flash_.flashWrite(lastSampleAddr_, ptr, sampleSize_);
   if (!result) {
-
     printf("Error writing to flash :-(\n");
     printf("  last sample addr = 0x%08X\n", lastSampleAddr_);
     status += 1;
@@ -297,8 +304,8 @@ bool FlashSamples<F, T>::StoreSample(const T& data) {
   return (status == 0);
 }
 
-template <typename F, typename T>
-void FlashSamples<F, T>::Info() {
+template <typename T>
+void FlashSamples<T>::Info() {
   printf("Sample Size               : %u", sampleSize_);
   printf("Flash Storage Start       : 0x%08X", flashStorageStart_);
   printf("Flash Storage Length      : 0x%08X", flashStorageLength_);
@@ -317,5 +324,22 @@ void FlashSamples<F, T>::Info() {
     printf("Flash not scanned yet!\n");
   }
 }
+
+#if defined(ARDUINO)
+class EspFlash : public AbstractFlash {
+ public:
+  bool flashEraseSector(uint32_t sector) {
+    return ESP.flashEraseSector(sector);
+  }
+
+  bool flashWrite(uint32_t offset, uint32_t* data, size_t size) {
+    return ESP.flashWrite(offset, data, size);
+  }
+
+  bool flashRead(uint32_t offset, uint32_t* data, size_t size) {
+    return ESP.flashRead(offset, data, size);
+  }
+};
+#endif
 
 #endif
