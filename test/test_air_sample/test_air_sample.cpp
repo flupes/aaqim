@@ -93,6 +93,22 @@ void test_data_structure(void) {
   TEST_ASSERT_EQUAL(0.1f, output.Pm_2_5_Nmae());
 }
 
+void test_crc()
+{
+  uint32_t seconds = k2019epoch + 365 * 24 * 3600;
+  AirSample input(seconds, 10.0f, 50.0f, 100.0f, 1000.0f, 77, 40, 5, 0.1f);
+
+  AirSampleData data;
+  input.SetData(data);
+
+  AirSample outputOk(data);
+  TEST_ASSERT_TRUE(outputOk.IsValid());
+
+  data.reserved = 0x01;
+  AirSample outputCorrupted(data);
+  TEST_ASSERT_FALSE(outputCorrupted.IsValid());
+}
+
 #if defined(ARDUINO)
 #include <Arduino.h>
 void loop() {}
@@ -107,5 +123,6 @@ int main(int argc, char **argv) {
   RUN_TEST(test_timestamp);
   RUN_TEST(test_stats);
   RUN_TEST(test_data_structure);
+  RUN_TEST(test_crc);
   UNITY_END();
 }
