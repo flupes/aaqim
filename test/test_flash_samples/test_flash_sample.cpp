@@ -1,5 +1,14 @@
+#if defined(ARDUINO)
 #include <Arduino.h>
 #include <flash_hal.h>
+#define FLASH_TYPE EspClass
+#define FLASH_INSTANCE ESP
+#else
+#include "sim_flash.h"
+SimEspFlash gSimFlash;
+#define FLASH_TYPE SimEspFlash
+#define FLASH_INSTANCE gSimFlash
+#endif
 
 #include "flash_samples.h"
 #include "unity.h"
@@ -12,7 +21,7 @@ const size_t kMaxSampleLength = kBytesToAllocate / kSampleSize;
 const size_t kSamplesPerSector = SPI_FLASH_SEC_SIZE / kSampleSize;
 
 void TestUnaligned() {
-  FlashSamples<uint64_t> unaligned(kMaxSampleLength - 256, kFlashOffset - 512);
+  FlashSamples<FLASH_TYPE, uint64_t> unaligned(FLASH_INSTANCE, kMaxSampleLength - 256, kFlashOffset - 512);
 
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset, unaligned.FlashStorageStart());
   TEST_ASSERT_EQUAL(kBytesToAllocate, unaligned.FlashStorageLength());
@@ -22,7 +31,7 @@ void TestUnaligned() {
 }
 
 void TestAligned() {
-  FlashSamples<uint64_t> aligned(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> aligned(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset, aligned.FlashStorageStart());
   TEST_ASSERT_EQUAL(kBytesToAllocate, aligned.FlashStorageLength());
   TEST_ASSERT_EQUAL(FS_PHYS_ADDR + kFlashOffset + kBytesToAllocate,
@@ -33,7 +42,7 @@ void TestAligned() {
 }
 
 void TestErase() {
-  FlashSamples<uint64_t> samples(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   samples.Begin(true);
   TEST_ASSERT_TRUE(samples.IsScanned());
   TEST_ASSERT_TRUE(samples.IsEmpty());
@@ -42,7 +51,7 @@ void TestErase() {
 }
 
 void TestWriteOnEmptyFirstSector() {
-  FlashSamples<uint64_t> samples(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   TEST_ASSERT_EQUAL(UINT32_MAX, samples.NumberOfSamples());
   samples.Begin();
   TEST_ASSERT_TRUE(samples.IsEmpty());
@@ -72,7 +81,7 @@ void TestWriteOnEmptyFirstSector() {
 }
 
 void TestWriteOnSecondSector() {
-  FlashSamples<uint64_t> samples(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
   TEST_ASSERT_EQUAL(kSamplesPerSector, samples.NumberOfSamples());
@@ -104,7 +113,7 @@ void TestWriteOnSecondSector() {
 }
 
 void TestWriteOnThirdSector() {
-  FlashSamples<uint64_t> samples(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
   TEST_ASSERT_EQUAL(2 * kSamplesPerSector, samples.NumberOfSamples());
@@ -149,7 +158,7 @@ void TestWriteOnThirdSector() {
 }
 
 void TestWriteAgainOnFirstAndSecond() {
-  FlashSamples<uint64_t> samples(kMaxSampleLength, kFlashOffset);
+  FlashSamples<FLASH_TYPE, uint64_t> samples(FLASH_INSTANCE, kMaxSampleLength, kFlashOffset);
   samples.Begin();
   TEST_ASSERT_FALSE(samples.IsEmpty());
 
@@ -194,8 +203,14 @@ void TestWriteAgainOnFirstAndSecond() {
   TEST_ASSERT_EQUAL(4 * kSamplesPerSector + kSamplesPerSector / 2 - 1, data);
 }
 
+#if defined(ARDUINO)
+void loop() {}
+
 void setup() {
   Serial.begin(115200);
+#else
+  int main() {
+#endif
 
   UNITY_BEGIN();
   TEST_ASSERT_EQUAL(8, kSampleSize);
@@ -214,41 +229,3 @@ void setup() {
   RUN_TEST(TestWriteAgainOnFirstAndSecond);
   UNITY_END();
 }
-
-void loop() {}
-
-#if 0
-
-#if defined(CLEAR_TEST_FLASH)
-  samplesB.Begin(true);
-#else
-  samplesB.Begin();
-#endif
-  samplesB.Info();
-
-  bool result = false;
-  uint32_t number = 0;
-  if (samplesB.NumberOfSamples() > 0) {
-    result = samplesB.ReadSample(0, &number);
-    if (!result) {
-      Serial.println("Failed to read the last element!");
-    }
-  }
-  Serial.println("Write 400 samples...");
-  for (size_t i = 0; i < 400; i++) {
-    number++;
-    result = samplesB.StoreSample(&number);
-    if (!result) {
-      Serial.print("Failed to write element #");
-      Serial.println(i);
-    }
-  }
-  samplesB.Info();
-  for (size_t s = 0; s < 4; s++) {
-    samplesB.ReadSample(s, &number);
-    Serial.print(s);
-    Serial.print(" -> ");
-    Serial.println(number);
-  }
-
-#endif

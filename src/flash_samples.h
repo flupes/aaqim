@@ -1,8 +1,14 @@
 #ifndef AAQIM_FLASH_SAMPLES_H
 #define AAQIM_FLASH_SAMPLES_H
 
+#if defined(ARDUINO)
 #include <Arduino.h>
 #include <flash_hal.h>
+#else
+#include <stdio.h>
+#include "sim_flash.h"
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -20,7 +26,7 @@
  * The class is not resilient to multiple instanciantion, so use with care!
  *
  */
-template <typename T>
+template <typename F, typename T>
 class FlashSamples {
  public:
   /** Declare the flash accessor.
@@ -32,7 +38,7 @@ class FlashSamples {
    * stored at the begining of the ESP8266 filesystem flash area.
    */
 
-  FlashSamples(size_t samplesLength, uint32_t startOffset = 0);
+  FlashSamples(F& flash, size_t samplesLength, uint32_t startOffset = 0);
 
   /** Retrieve the first/last sample addresses on the existing storage.
    *
@@ -104,6 +110,8 @@ class FlashSamples {
   void Info();
 
  protected:
+  F& flash_;
+
   uint32_t WrapAddress(uint32_t addr) {
     if (addr >= FlashStorageEnd()) {
       addr -= flashStorageLength_;
@@ -125,9 +133,11 @@ class FlashSamples {
   bool empty_;   /** Is the flash area empty */
 };
 
-template <typename T>
-FlashSamples<T>::FlashSamples(size_t samplesLength, uint32_t startOffset)
-    : sampleSize_(sizeof(T)),
+template <typename F, typename T>
+FlashSamples<F, T>::FlashSamples(F& flash, size_t samplesLength,
+                              uint32_t startOffset)
+    : flash_(flash),
+      sampleSize_(sizeof(T)),
       flashSectorSize_(SPI_FLASH_SEC_SIZE),
       scanned_(false),
       empty_(false) {
@@ -138,11 +148,15 @@ FlashSamples<T>::FlashSamples(size_t samplesLength, uint32_t startOffset)
   uint32_t length = sampleSize_ * samplesLength;
   uint32_t available = FS_PHYS_SIZE - startOffset;
   if (available < 2 * flashSectorSize_) {
-    Serial.println("FlashSamples request is not valid:");
-    Serial.println("  less than 2 secors available from the specified offset!");
-    Serial.println("Stop now");
+    printf("FlashSamples request is not valid:\n");
+    printf("  less than 2 secors available from the specified offset!\n");
+    printf("Stop now\n");
+#if defined(ARDUINO)
     while (1)
       ;
+#else
+    exit(1);
+#endif
   }
   // we need at the very least 2 sectors to avoid loosing data
   // when erasing a used sector
@@ -162,13 +176,13 @@ FlashSamples<T>::FlashSamples(size_t samplesLength, uint32_t startOffset)
   lastSampleAddr_ = UINT32_MAX;
 }
 
-template <typename T>
-void FlashSamples<T>::Begin(bool erase) {
+template <typename F, typename T>
+void FlashSamples<F, T>::Begin(bool erase) {
   // For some debug scenarios, we may want to clear the flash first!
   if (erase) {
     uint32_t sector = flashStorageStart_ / flashSectorSize_;
     for (uint32_t s = 0; s < SectorsInUse(); s++) {
-      ESP.flashEraseSector(sector);
+      flash_.flashEraseSector(sector);
       sector++;
     }
   }
@@ -179,7 +193,7 @@ void FlashSamples<T>::Begin(bool erase) {
   for (uint32_t i = 0; i < flashStorageLength_; i += sampleSize_) {
     // Only check the first four byte of each sample
     // (do not write sample starting with 32 bits set to one!)
-    ESP.flashRead(addr, &current, 4);
+    flash_.flashRead(addr, &current, 4);
     if (firstSampleAddr_ == UINT32_MAX) {
       if (previous == 0xFFFFFFFF && current != 0xFFFFFFFF) {
         firstSampleAddr_ = addr;
@@ -195,19 +209,18 @@ void FlashSamples<T>::Begin(bool erase) {
   }
   if (firstSampleAddr_ == UINT32_MAX) {
     empty_ = true;
-  }
-  else {
+  } else {
     // there are samples, but we did not find the last one yet
     // (when at the very end of the flash space)
-    if ( lastSampleAddr_ == UINT32_MAX) {
+    if (lastSampleAddr_ == UINT32_MAX) {
       lastSampleAddr_ = FlashStorageEnd() - sampleSize_;
     }
   }
   scanned_ = true;
 }
 
-template <typename T>
-size_t FlashSamples<T>::NumberOfSamples() {
+template <typename F, typename T>
+size_t FlashSamples<F, T>::NumberOfSamples() {
   uint32_t count = UINT32_MAX;
   if (scanned_) {
     // Only if flash has been scanned properly
@@ -226,8 +239,8 @@ size_t FlashSamples<T>::NumberOfSamples() {
   return count;
 }
 
-template <typename T>
-bool FlashSamples<T>::ReadSample(size_t index, T& data) {
+template <typename F, typename T>
+bool FlashSamples<F, T>::ReadSample(size_t index, T& data) {
   if (index > NumberOfSamples() - 1) {
     return false;
   }
@@ -236,11 +249,11 @@ bool FlashSamples<T>::ReadSample(size_t index, T& data) {
     addr += flashStorageLength_;
   }
   uint32_t* ptr = (uint32_t*)(&data);
-  return ESP.flashRead(addr, ptr, sampleSize_);
+  return flash_.flashRead(addr, ptr, sampleSize_);
 }
 
-template <typename T>
-bool FlashSamples<T>::StoreSample(const T& data) {
+template <typename F, typename T>
+bool FlashSamples<F, T>::StoreSample(const T& data) {
   uint8_t status = 0;
   // Handle empty flash versus non-empty
   if (empty_) {
@@ -254,10 +267,11 @@ bool FlashSamples<T>::StoreSample(const T& data) {
   // If everything went well, the flash memory space where we need
   // to write should already have been initialized
   uint32_t* ptr = (uint32_t*)(&data);
-  bool result = ESP.flashWrite(lastSampleAddr_, ptr, sampleSize_);
+  bool result = flash_.flashWrite(lastSampleAddr_, ptr, sampleSize_);
   if (!result) {
-    Serial.println("Error writing to flash :-(");
-    Serial.println(lastSampleAddr_);
+
+    printf("Error writing to flash :-(\n");
+    printf("  last sample addr = 0x%08X\n", lastSampleAddr_);
     status += 1;
   }
 
@@ -270,47 +284,37 @@ bool FlashSamples<T>::StoreSample(const T& data) {
   uint32_t nextAddress = WrapAddress(lastSampleAddr_ + sampleSize_);
   uint32_t nextSector = nextAddress / flashSectorSize_;
   if (currentSector != nextSector) {
-    Serial.print("Erase sector starting at addr = ");
-    Serial.println(nextAddress, HEX);
+    printf("Erase sector starting at addr = 0x%08X\n", nextAddress);
     if (firstSampleAddr_ == nextAddress) {
       firstSampleAddr_ = WrapAddress(nextAddress + flashSectorSize_);
     }
-    bool result = ESP.flashEraseSector(nextSector);
+    bool result = flash_.flashEraseSector(nextSector);
     if (!result) {
-      Serial.println("Error erasing sector :-(");
+      printf("Error erasing sector :-(\n");
       status += 1;
     }
   }
   return (status == 0);
 }
 
-template <typename T>
-void FlashSamples<T>::Info() {
-  char msg[32];
-  sprintf(msg, "Sample Size               : %u", sampleSize_);
-  Serial.println(msg);
-  sprintf(msg, "Flash Storage Start       : 0x%08X", flashStorageStart_);
-  Serial.println(msg);
-  sprintf(msg, "Flash Storage Length      : 0x%08X", flashStorageLength_);
-  Serial.println(msg);
-  sprintf(msg, "Number of Sectors in Use  : %u", SectorsInUse());
-  Serial.println(msg);
-  sprintf(msg, "Capacity (in samples)     : %u", NominalCapacity());
-  Serial.println(msg);
+template <typename F, typename T>
+void FlashSamples<F, T>::Info() {
+  printf("Sample Size               : %u", sampleSize_);
+  printf("Flash Storage Start       : 0x%08X", flashStorageStart_);
+  printf("Flash Storage Length      : 0x%08X", flashStorageLength_);
+  printf("Number of Sectors in Use  : %u", SectorsInUse());
+  printf("Capacity (in samples)     : %u", NominalCapacity());
   if (scanned_) {
-    sprintf(msg, "First Sample Addr         : 0x%08X", firstSampleAddr_);
-    Serial.println(msg);
-    sprintf(msg, "Last Sample Addr          : 0x%08X", lastSampleAddr_);
-    Serial.println(msg);
+    printf("First Sample Addr         : 0x%08X", firstSampleAddr_);
+    printf("Last Sample Addr          : 0x%08X", lastSampleAddr_);
     size_t n = NumberOfSamples();
     if (n != UINT32_MAX) {
-      sprintf(msg, "Number of Samples         : %u", n);
+      printf("Number of Samples         : %u", n);
     } else {
-      sprintf(msg, "Number of Samples         : N/A");
+      printf("Number of Samples         : N/A");
     }
-    Serial.println(msg);
   } else {
-    Serial.println("Flash not scanned yet!");
+    printf("Flash not scanned yet!\n");
   }
 }
 
