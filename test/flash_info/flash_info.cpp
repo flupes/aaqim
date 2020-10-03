@@ -46,12 +46,27 @@ void setup() {
 
   uint32_t offset = FS_PHYS_ADDR;
   uint32_t number;
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 16; i++) {
     bool status = ESP.flashRead(offset, &number, 4);
     sprintf(msg, "#%d -> 0x%08X (status=%d)", i, number, status);
     Serial.println(msg);
     offset += 4;
   }
+
+  // Read test
+  offset = FS_PHYS_ADDR;
+  uint32_t count = 0;
+  unsigned long start = millis();
+  for (uint32_t i=0; i<FS_PHYS_SIZE/4; i++) {
+    ESP.flashRead(offset, &number, 4);
+    if ( number != 0xFFFFFFFF ) {
+      count++;
+    }
+    offset += 4;
+  }
+  unsigned long stop = millis();
+  info("Elapsed time to read all flash (ms)", stop-start);
+  info("number of used flash", count);
 
   Serial.println("done.");
 
