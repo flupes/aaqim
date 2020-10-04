@@ -79,7 +79,7 @@ void test_data_structure(void) {
   AirSample input(seconds, 10.0f, 50.0f, 100.0f, 1000.0f, 77, 40, 5, 0.1f);
 
   AirSampleData data;
-  input.SetData(data);
+  input.ToData(data);
   AirSample output(data);
   TEST_ASSERT_EQUAL(seconds, output.Seconds());
   TEST_ASSERT_EQUAL(10.0f, output.Pm_1_0());
@@ -99,7 +99,7 @@ void test_crc()
   AirSample input(seconds, 10.0f, 50.0f, 100.0f, 1000.0f, 77, 40, 5, 0.1f);
 
   AirSampleData data;
-  input.SetData(data);
+  input.ToData(data);
 
   AirSample outputOk(data);
   TEST_ASSERT_TRUE(outputOk.IsValid());

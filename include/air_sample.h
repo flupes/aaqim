@@ -33,21 +33,7 @@ class AirSample {
   }
 
   AirSample(const AirSampleData &data) {
-    timestamp_22bits_to_unix_seconds(data.timestamp24, seconds_);
-    pm_1_0_cf_ = short_to_cf(data.pm_1_0_short);
-    pm_2_5_cf_ = short_to_cf(data.pm_2_5_short);
-    pm_10_0_cf_ = short_to_cf(data.pm_10_0_short);
-    pressure_ = short_to_mbar_pressure(data.pressure_short);
-    temperature_f_ = byte_to_temperature_f(data.temperature_byte);
-    humidity_ = data.humidity_byte;
-    byte_to_stats(data.stats_byte, pm_2_5_mae_, samples_count_);
-    pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
-    uint8_t crc = crc8_maxim((uint8_t *)(&data), 15);
-    if (crc == data.crc) {
-      set_bit(flags_, FlagsBitsPos::IsValid);
-    } else {
-      clear_bit(flags_, FlagsBitsPos::IsValid);
-    }
+    FromData(data);
   }
 
   void Set(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
@@ -71,7 +57,25 @@ class AirSample {
     pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
   }
 
-  void SetData(AirSampleData &data) {
+  void FromData(const AirSampleData &data) {
+    timestamp_22bits_to_unix_seconds(data.timestamp24, seconds_);
+    pm_1_0_cf_ = short_to_cf(data.pm_1_0_short);
+    pm_2_5_cf_ = short_to_cf(data.pm_2_5_short);
+    pm_10_0_cf_ = short_to_cf(data.pm_10_0_short);
+    pressure_ = short_to_mbar_pressure(data.pressure_short);
+    temperature_f_ = byte_to_temperature_f(data.temperature_byte);
+    humidity_ = data.humidity_byte;
+    byte_to_stats(data.stats_byte, pm_2_5_mae_, samples_count_);
+    pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
+    uint8_t crc = crc8_maxim((uint8_t *)(&data), 15);
+    if (crc == data.crc) {
+      set_bit(flags_, FlagsBitsPos::IsValid);
+    } else {
+      clear_bit(flags_, FlagsBitsPos::IsValid);
+    }
+  }
+
+  void ToData(AirSampleData &data) {
     unix_seconds_to_timestamp_22bits(seconds_, data.timestamp24);
     data.reserved = 0x00;
     data.pm_1_0_short = cf_to_short(pm_1_0_cf_);
