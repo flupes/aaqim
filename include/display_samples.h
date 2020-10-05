@@ -46,14 +46,14 @@ class DisplaySamples {
       uint32_t bufferMaxTimestamp = now - bufferReversedIndex * period_;
       uint32_t bufferMinTimestamp = bufferMaxTimestamp - period_;
 
-      printf("samplesIndex =        %ld\n", samplesIndex);
+      printf("samplesIndex =        %d\n", samplesIndex);
       printf("sampleTimestamp =     %d (age = %d)\n", sampleTimestamp,
              now - sampleTimestamp);
-      printf("bufferReversedIndex = %ld\n", bufferReversedIndex);
+      printf("bufferReversedIndex = %d\n", bufferReversedIndex);
       printf("buffer min/max ts =  [%d, %d] | age = (%d, %d)\n",
              bufferMinTimestamp, bufferMaxTimestamp, now - bufferMaxTimestamp,
              now - bufferMinTimestamp);
-      printf("bucketCount =         %ld | count = %d\n", bucketCount, count);
+      printf("bucketCount =         %d | count = %d\n", bucketCount, count);
 
       if (bufferMinTimestamp < sampleTimestamp &&
           sampleTimestamp <= bufferMaxTimestamp) {
@@ -86,7 +86,7 @@ class DisplaySamples {
       }
     }
     for (size_t r = bufferReversedIndex; r < length_; r++) {
-      printf("## mark %ld with no data\n", r);
+      printf("## mark %d with no data\n", r);
       buffer_[length_ - r - 1] = INT16_MIN;
     }
     return count;
