@@ -9,7 +9,7 @@
 
 const uint32_t SPI_FLASH_SEC_SIZE = 0x1000;
 
-const uint32_t FS_PHYS_ADDR = 0x03000000;
+const uint32_t FS_PHYS_ADDR = 0x00300000;
 const uint32_t FS_PHYS_SIZE = 0x000FA000;
 
 class SimFlash : public AbstractFlash {
