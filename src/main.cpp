@@ -16,12 +16,17 @@
 #include "credentials.h"
 #include "epd2in7b.h"
 #include "sensors.h"
+#include "display_samples.h"
 
 #define COLORED 1
 #define UNCOLORED 0
 
 Epd epd;
+// This is ugly. TODO: encapsulate these 2 canvas in a proper class
 GFXcanvas1 *canvas[2];
+
+EspFlash gFlash;
+FlashAirDataSamples gFlashSamples(gFlash, 0xA000);
 
 // Use the AD converted of the ESP8266 to read the chip supply
 // voltage (instean of the analog input pin)
@@ -56,6 +61,21 @@ void setup() {
   Serial.println(startHeap);
   Serial.print("Fragmentation = ");
   Serial.println(ESP.getHeapFragmentation());
+
+  gFlashSamples.Begin();
+  printf("nb of sectors in use : %d\n", gFlashSamples.SectorsInUse());
+  printf("first addr of reserved : 0x%08X\n", gFlashSamples.FlashStorageStart());
+  printf("end of reserved flash  : 0x%08X\n", gFlashSamples.FlashStorageEnd());
+  printf("nominal number of samples : %d\n", gFlashSamples.NominalCapacity());
+  printf("current number of samples stored : %d\n", gFlashSamples.NumberOfSamples());
+
+// Wiped flash in 4986 ms
+// nb of sectors in use : 160
+// last addr of reserved : 3801088
+// nominal number of samples : 40704
+// current number of samples stored : 0
+
+// UT flash start : 3801088
 
   Serial.println("Init e-Paper...");
   if (epd.Init() != 0) {
@@ -113,10 +133,16 @@ void setup() {
     size_t nbSamples = ComputeStats(sensors, sample, primaryIndex);
 #if 0
     // Photo Op only :-)
-    sample.Set(sample.Seconds(), 0.0, 98.1, 0.0, 0.0, 0, 0, sample.SamplesCount(), 30.0);
+    sample.Set(sample.Seconds(), 0.0, 98.1, 0.0, 0.0, 0, 0, sample.SamplesCount(), 18.4);
+    //sample.Set(sample.Seconds(), 0.0, 1.4, 0.0, 0.0, 0, 0, sample.SamplesCount(), 0.2);
 #endif
 
     if (nbSamples > 0) {
+      // Store permanently sample to flash
+      AirSampleData compacted;
+      sample.ToData(compacted);
+      gFlashSamples.StoreSample(compacted);
+
       time_t seconds = sample.Seconds() + kTimeZoneOffsetSeconds;
       tm *local = gmtime(&seconds);
       char date[16];
