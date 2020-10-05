@@ -209,10 +209,10 @@ void setup() {
 #endif
 
   UNITY_BEGIN();
+  //TEST_ASSERT_EQUAL(4, sizeof(size_t));
   TEST_ASSERT_EQUAL(8, kSampleSize);
   TEST_ASSERT_EQUAL(4096 * 3, kBytesToAllocate);
   TEST_ASSERT_EQUAL(1536, kMaxSampleLength);
-
   RUN_TEST(TestUnaligned);
   RUN_TEST(TestAligned);
 

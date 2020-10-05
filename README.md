@@ -55,4 +55,16 @@ Not by design, just un-unsed parts from previous projects:
     [DigiBaro](https://github.com/flupes/digibaro2/blob/master/README.md).
   - LiPo battery.
 
+## How to build
 
+The project is using
+[PlatformIO](https://docs.platformio.org/en/latest/home/index.html). I develop
+using Visual Studio Code (https://code.visualstudio.com/docs) which play nicely
+with the PlatformIo extension.
+
+Several of the unit test are also runnable on the native platform (Ubuntu 20.04
+in my case). However, I configured the build to use a 32 bits architecture.
+Since any modern computer will today be `amd64`, you will have to install the 32
+bit compatibility packages:
+
+    sudo apt install gcc-multilib g++-multilib
