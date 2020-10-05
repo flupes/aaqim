@@ -1,5 +1,5 @@
-#include "display_samples.h"
 #include "aaqim_utils.h"
+#include "display_samples.h"
 #include "unity.h"
 
 #if defined(ARDUINO)
@@ -23,10 +23,11 @@ void TestFillFromEmptyFlash() {
 
 void StoreSample(uint32_t age, float pm25) {
   static uint32_t counter = 1;
-  dbg_printf("store sample # %d with age %d --> ts = %d\n", counter++, age, kNowSeconds-age);
+  dbg_printf("store sample # %d with age %d --> ts = %d\n", counter++, age,
+             kNowSeconds - age);
 
-  AirSample sample(kNowSeconds - age, 0.0f, pm25, 10.0*counter, 1000.0f, 77, 33, 3,
-                   0.5f);
+  AirSample sample(kNowSeconds - age, 0.0f, pm25, 10.0 * counter, 1000.0f, 77,
+                   33, 3, 0.5f);
   AirSampleData data;
   sample.ToData(data);
   gFlashSamples.StoreSample(data);
@@ -34,25 +35,34 @@ void StoreSample(uint32_t age, float pm25) {
 
 void StoreSerie() {
   // The target samples are designed to results in the current
-  // display buffer (number indicates how many samples is this time slice)
+  // display buffer (samples number indicates how many samples
+  // should be sorted is this time slice)
+  // | bucket  |   7   |   6   |   5   |   4   |   3   |   2   |   1   |   0   |
+  // | age   -2400   -2100   -1800   -1500   -1200   -900    -600    -300    now=0
+  // | samples |   0   |   3   |   1   |   2   |   0   |   0   |   2   |   0   |
+  // | pm_2_5  |       | 35.4  | 150.4 | 250.4 |       |       | 350.4 |       |
+  // | aqi     |       |  100  |  200  |  300  |       |       |  400  |       |
   //
-  // | 0 | 3 | 1 | 2 | 0 | 0 | 2 | 0 |
-  //
+
+  // We show:
   // - missing very recent and very old samples
   // - gap in the middle of the data
   // - uneven distribution of the samples
-  StoreSample(2050, 110.0f);
+
+  StoreSample(1920, 35.4f);  // flash index = 7
+  StoreSample(2040, 30.4f);  // flash index = 6
   // sample unordered: should not matter IF within a timeslice!
-  StoreSample(1900, 100.0f);
-  StoreSample(2000, 90.0f);
+  StoreSample(1860, 40.4f);  // flash index = 5
 
-  StoreSample(1600, 200.0f);
+  StoreSample(1620, 150.4);  // flash index = 4
 
-  StoreSample(1400, 250.0f);
-  StoreSample(1300, 350.0f);
+  StoreSample(1440, 250.4f + 40.0f);  // flash index = 3
+  // Sample at the edge: it should fall in bucket 4 (not 3)
+  StoreSample(1260, 250.4f - 40.0f);  // flash index = 2
 
-  StoreSample(500, 350.0f);
-  StoreSample(400, 450.0f);
+  StoreSample(540, 350.4f + 20.0f);  // flash index = 1
+  // sample at the edge: it should fall in bucket 1
+  StoreSample(300, 350.4f - 20.0f);  // flash index = 0
 }
 
 void TestFillDisplaySample() {
@@ -62,10 +72,19 @@ void TestFillDisplaySample() {
   DisplaySamples<8> displaySamples(300);
   size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);
   TEST_ASSERT_EQUAL(4, count);
+
+  for (size_t s = 0; s < displaySamples.Length(); s++) {
+    int16_t aqi = displaySamples.AqiPm_2_5(s);
+    if (aqi == INT16_MIN) {
+      printf("| N/A \t");
+    } else {
+      printf("| %d \t", aqi);
+    }
+  }
+  printf("|\n");
 }
 
 int main() {
-
   UNITY_BEGIN();
   RUN_TEST(TestFillFromEmptyFlash);
   RUN_TEST(TestFillDisplaySample);
