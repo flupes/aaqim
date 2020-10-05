@@ -1,4 +1,5 @@
 #include "display_samples.h"
+#include "aaqim_utils.h"
 #include "unity.h"
 
 #if defined(ARDUINO)
@@ -22,9 +23,9 @@ void TestFillFromEmptyFlash() {
 
 void StoreSample(uint32_t age, float pm25) {
   static uint32_t counter = 1;
-  printf("store sample # %d with age %d --> ts = %d\n", counter++, age, kNowSeconds-age);
+  dbg_printf("store sample # %d with age %d --> ts = %d\n", counter++, age, kNowSeconds-age);
 
-  AirSample sample(kNowSeconds - age, 0.0f, pm25, 0.0f, 1000.0f, 77, 33, 3,
+  AirSample sample(kNowSeconds - age, 0.0f, pm25, 10.0*counter, 1000.0f, 77, 33, 3,
                    0.5f);
   AirSampleData data;
   sample.ToData(data);
