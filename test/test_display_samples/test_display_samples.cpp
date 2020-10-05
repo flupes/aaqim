@@ -38,12 +38,12 @@ void StoreSerie() {
   // display buffer (samples number indicates how many samples
   // should be sorted is this time slice)
   // | bucket  |   7   |   6   |   5   |   4   |   3   |   2   |   1   |   0   |
-  // | age   -2400   -2100   -1800   -1500   -1200   -900    -600    -300    now=0
+  // | age   -2400   -2100   -1800   -1500   -1200   -900    -600    -300 now=0
   // | samples |   0   |   3   |   1   |   2   |   0   |   0   |   2   |   0   |
   // | pm_2_5  |       | 35.4  | 150.4 | 250.4 |       |       | 350.4 |       |
   // | aqi     |       |  100  |  200  |  300  |       |       |  400  |       |
   //
-
+  //
   // We show:
   // - missing very recent and very old samples
   // - gap in the middle of the data
@@ -70,21 +70,43 @@ void TestFillDisplaySample() {
   StoreSerie();
 
   DisplaySamples<8> displaySamples(300);
+  TEST_ASSERT_EQUAL(8, displaySamples.Length());
+
   size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);
   TEST_ASSERT_EQUAL(4, count);
 
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(0));
+  TEST_ASSERT_EQUAL(100, displaySamples.AqiPm_2_5(1));
+  TEST_ASSERT_EQUAL(200, displaySamples.AqiPm_2_5(2));
+  TEST_ASSERT_EQUAL(300, displaySamples.AqiPm_2_5(3));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(4));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(5));
+  TEST_ASSERT_EQUAL(400, displaySamples.AqiPm_2_5(6));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(7));
+
+  // Out of range index
+  TEST_ASSERT_EQUAL(INT16_MAX, displaySamples.AqiPm_2_5(8));
+
+#if defined(AAQIM_DEBUG)
+  // For unknown reason, this does *not* print when running on the ESP8266!
   for (size_t s = 0; s < displaySamples.Length(); s++) {
     int16_t aqi = displaySamples.AqiPm_2_5(s);
     if (aqi == INT16_MIN) {
-      printf("| N/A \t");
+      printf("| N/A ");
     } else {
-      printf("| %d \t", aqi);
+      printf("| %d ", aqi);
     }
   }
   printf("|\n");
+#endif
 }
 
+#if defined(ARDUINO)
+void loop() {}
+void setup() {
+#else
 int main() {
+#endif
   UNITY_BEGIN();
   RUN_TEST(TestFillFromEmptyFlash);
   RUN_TEST(TestFillDisplaySample);
