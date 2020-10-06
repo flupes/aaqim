@@ -16,7 +16,7 @@ FlashAirDataSamples gFlashSamples(gFlash, 64, kFlashOffset);
 
 void TestFillFromEmptyFlash() {
   gFlashSamples.Begin(true);
-  DisplaySamples<8> displaySamples(300);
+  DisplaySamples<8, int16_t> displaySamples(300);
   size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);
   TEST_ASSERT_EQUAL(0, count);
 }
@@ -69,7 +69,7 @@ void TestFillDisplaySample() {
   // First we need to populate the flash...
   StoreSerie();
 
-  DisplaySamples<8> displaySamples(300);
+  DisplaySamples<8, int16_t> displaySamples(300);
   TEST_ASSERT_EQUAL(8, displaySamples.Length());
 
   size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);

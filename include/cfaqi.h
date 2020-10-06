@@ -16,11 +16,11 @@ enum class AqiLevel : int8_t {
 };
 const size_t kAqiLevelsCount = 6;
 
-const char *AqiNames[kAqiLevelsCount] = {"Good",      "Moderate",    "UnhealthySG",
-                                    "Unhealthy", "VeryUnheal.", "Hazardous"};
+const char *AqiNames[kAqiLevelsCount] = {
+    "Good", "Moderate", "UnhealthySG", "Unhealthy", "VeryUnheal.", "Hazardous"};
 
 const char *AqiColors[kAqiLevelsCount] = {"Green", "Yellow", "Orange",
-                                     "Red",   "Purple", "Marron"};
+                                          "Red",   "Purple", "Marron"};
 
 // From page 11 of:
 // https://www.airnow.gov/sites/default/files/2018-05/aqi-technical-assistance-document-may2016.pdf
@@ -29,7 +29,7 @@ const float ConcentrationBreakpoints[kAqiLevelsCount + 2] = {
     -0.1f, 12.0f, 35.4f, 55.4f, 150.4f, 250.4f, 350.4f, 500.4f};
 
 const int16_t AqiBreakpoints[kAqiLevelsCount + 2] = {-1,  50,  100, 150,
-                                                200, 300, 400, 500};
+                                                     200, 300, 400, 500};
 
 bool pm25_to_aqi(float pm, int16_t &aqiValue, AqiLevel &aqiLevel) {
   bool valid = false;
@@ -59,6 +59,13 @@ bool pm25_to_aqi(float pm, int16_t &aqiValue, AqiLevel &aqiLevel) {
   }
 
   return valid;
+}
+
+int16_t pm25_to_aqi_value(float pm) {
+  AqiLevel level;
+  int16_t value;
+  pm25_to_aqi(pm, value, level);
+  return value;
 }
 
 #endif
