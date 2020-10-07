@@ -30,10 +30,10 @@ class DisplaySamples {
 
   /**
    * Fills the buffer from samples stored on flash.
-   * 
+   *
    * @param MAPPING_FUNC Function to map the average for each time slice to
-   *                     the bucket value. For example, for the air samples 
-   *                     we compute the average on the pm25 concentration 
+   *                     the bucket value. For example, for the air samples
+   *                     we compute the average on the pm25 concentration
    *                     (linear scale), but desire to fill the buffer with
    *                     the AQI index (using pm25_to_aqi_value).
    *
@@ -80,12 +80,21 @@ class DisplaySamples {
   DATA_TYPE max_;
   DATA_TYPE buffer_[BUFFER_LENGTH];
 
+  void UpdateLimits(DATA_TYPE v) {
+    if (v < min_) {
+      min_ = v;
+    }
+    if (v > max_) {
+      max_ = v;
+    }
+  }
 };
 
 template <size_t BUFFER_LENGTH, typename DATA_TYPE>
 template <typename MAPPING_FUNC>
 size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
-                                                      uint32_t now, MAPPING_FUNC mapf) {
+                                                      uint32_t now,
+                                                      MAPPING_FUNC mapf) {
   // Initialize min/max (cannot use INT16_MIN because it is already used
   // to mark "no data"
   min_ = std::numeric_limits<DATA_TYPE>::max() - 1;
@@ -127,12 +136,6 @@ size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
       samplePm_2_5 = sample.Pm_2_5();
       dbg_printf("Read sample # %d : pm_2_5 = %.1f\n", samplesIndex,
                  samplePm_2_5);
-      if (samplePm_2_5 < min_) {
-        min_ = samplePm_2_5;
-      }
-      if (samplePm_2_5 > max_) {
-        max_ = samplePm_2_5;
-      }
     }
     uint32_t sampleTimestamp = sample.Seconds();
     uint32_t bufferMaxTimestamp = now - bufferReversedIndex * period_;
@@ -157,8 +160,9 @@ size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
       if (sampleTimestamp <= bufferMinTimestamp) {
         // move to previous buffer slot
         if (bucketCount > 0) {
-          buffer_[length_ - bufferReversedIndex - 1] =
-            mapf(accumulator / (float)(bucketCount));
+          auto value = mapf(accumulator / (float)(bucketCount));
+          buffer_[length_ - bufferReversedIndex - 1] = value;
+          UpdateLimits(value);
           count++;
           accumulator = 0;
           bucketCount = 0;
@@ -180,8 +184,9 @@ size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
   }
   // flush last accumulated samples
   if (bucketCount > 0) {
-    buffer_[length_ - bufferReversedIndex - 1] =
-        mapf(accumulator / (float)(bucketCount));
+    auto value = mapf(accumulator / (float)(bucketCount));
+    buffer_[length_ - bufferReversedIndex - 1] = value;
+    UpdateLimits(value);
     bufferReversedIndex++;
     count++;
   }

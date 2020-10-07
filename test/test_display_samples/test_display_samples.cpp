@@ -89,6 +89,10 @@ void TestFillDisplaySample() {
   // Out of range index
   TEST_ASSERT_EQUAL(INT16_MAX, displaySamples.Value(8));
 
+  // Test limits
+  TEST_ASSERT_EQUAL(100, displaySamples.SerieMin());
+  TEST_ASSERT_EQUAL(400, displaySamples.SerieMax());
+
 #if defined(AAQIM_DEBUG)
   // For unknown reason, this does *not* print when running on the ESP8266!
   for (size_t s = 0; s < displaySamples.Length(); s++) {
