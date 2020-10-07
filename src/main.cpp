@@ -8,15 +8,13 @@
 #include <time.h>
 
 #include "Fonts/ClearSans-Bold-48pt7b.h"
-#include "Fonts/ClearSans-Medium-12pt7b.h"
+// #include "Fonts/ClearSans-Medium-12pt7b.h"
 #include "Fonts/ClearSans-Medium-18pt7b.h"
-#include "air_sample.h"
 #include "analyze.h"
-#include "cfaqi.h"
 #include "credentials.h"
 #include "epd2in7b.h"
+#include "graph_samples.h"
 #include "sensors.h"
-#include "display_samples.h"
 
 #define COLORED 1
 #define UNCOLORED 0
@@ -64,18 +62,20 @@ void setup() {
 
   gFlashSamples.Begin();
   printf("nb of sectors in use : %d\n", gFlashSamples.SectorsInUse());
-  printf("first addr of reserved : 0x%08X\n", gFlashSamples.FlashStorageStart());
+  printf("first addr of reserved : 0x%08X\n",
+         gFlashSamples.FlashStorageStart());
   printf("end of reserved flash  : 0x%08X\n", gFlashSamples.FlashStorageEnd());
   printf("nominal number of samples : %d\n", gFlashSamples.NominalCapacity());
-  printf("current number of samples stored : %d\n", gFlashSamples.NumberOfSamples());
+  printf("current number of samples stored : %d\n",
+         gFlashSamples.NumberOfSamples());
 
-// Wiped flash in 4986 ms
-// nb of sectors in use : 160
-// last addr of reserved : 3801088
-// nominal number of samples : 40704
-// current number of samples stored : 0
+  // Wiped flash in 4986 ms
+  // nb of sectors in use : 160
+  // last addr of reserved : 3801088
+  // nominal number of samples : 40704
+  // current number of samples stored : 0
 
-// UT flash start : 3801088
+  // UT flash start : 3801088
 
   Serial.println("Init e-Paper...");
   if (epd.Init() != 0) {
@@ -96,6 +96,19 @@ void setup() {
     }
   }
   Serial.println();
+
+  // seconds is first initialized to the latest sample on record
+  // If a new sample if retrieve from the net, then seconds
+  // will be updated.
+  time_t seconds;
+  {
+    AirSampleData data;
+    AirSample last;
+    gFlashSamples.ReadSample(0, data);
+    last.FromData(data);
+    seconds = last.Seconds();
+  }
+
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println();
     Serial.println("WiFi Connected :-)");
@@ -143,8 +156,9 @@ void setup() {
       sample.ToData(compacted);
       gFlashSamples.StoreSample(compacted);
 
-      time_t seconds = sample.Seconds() + kTimeZoneOffsetSeconds;
-      tm *local = gmtime(&seconds);
+      seconds = sample.Seconds();
+      time_t localSeconds = seconds + kTimeZoneOffsetSeconds;
+      tm *local = gmtime(&localSeconds);
       char date[16];
       strftime(date, 16, "%b %d, %Y", local);
       char stamp[16];
@@ -155,7 +169,7 @@ void setup() {
       char datetime[16];
       strftime(datetime, 16, "%b %d, %H:%M", local);
 
-      CenterText(&ClearSans_Medium12pt7b, datetime, 24);
+      CenterText(&ClearSans_Medium12pt7b, datetime, 18);
 
       int16_t aqi = sample.AqiPm_2_5();
       Serial.print("AQI = ");
@@ -163,23 +177,27 @@ void setup() {
       Serial.print(" --> ");
       Serial.println(AqiNames[static_cast<int>(sample.Level())]);
       if (aqi > 100) {
-        canvas[1]->fillRoundRect(6, 35, EPD_WIDTH - 2 * 6, 70, 8, COLORED);
-        canvas[1]->fillRoundRect(10, 39, EPD_WIDTH - 2 * 10, 62, 4, UNCOLORED);
+        canvas[1]->fillRoundRect(6, 29, EPD_WIDTH - 2 * 6, 70, 8, COLORED);
+        canvas[1]->fillRoundRect(10, 33, EPD_WIDTH - 2 * 10, 62, 4, UNCOLORED);
       }
       String aqiValue(aqi);
-      CenterText(&ClearSans_Bold48pt7b, aqiValue.c_str(), 96);
+      CenterText(&ClearSans_Bold48pt7b, aqiValue.c_str(), 90);
 
       String aqiName(AqiNames[static_cast<int>(sample.Level())]);
-      CenterText(&ClearSans_Medium18pt7b, aqiName.c_str(), 132);
+      CenterText(&ClearSans_Medium18pt7b, aqiName.c_str(), 126);
 
       char msg[16];
       float mae = sample.MaeValue();
       if (mae > 15.0) {
-        canvas[1]->fillRoundRect(28, 140, EPD_WIDTH - 2 * 28, 24, 6, COLORED);
-        canvas[1]->fillRoundRect(30, 142, EPD_WIDTH - 2 * 30, 20, 4, UNCOLORED);
+        canvas[1]->fillRoundRect(28, 134, EPD_WIDTH - 2 * 28, 24, 6, COLORED);
+        canvas[1]->fillRoundRect(30, 136, EPD_WIDTH - 2 * 30, 20, 4, UNCOLORED);
       }
+      sprintf(msg, "MAE=%.1f / #%d/%d", sample.MaeValue(), primaryIndex+1, sample.SamplesCount());
+      CenterText(&ClearSans_Medium12pt7b, msg, 152);
+
+#if 0
       sprintf(msg, "MAE = %.1f", sample.MaeValue());
-      CenterText(&ClearSans_Medium12pt7b, msg, 158);
+      CenterText(&ClearSans_Medium12pt7b, msg, 152);
 
       sprintf(msg, "%d sensors (#%d)", sample.SamplesCount(), primaryIndex + 1);
       CenterText(&ClearSans_Medium12pt7b, msg, 184);
@@ -210,6 +228,7 @@ void setup() {
       Serial.println(vcc);
       sprintf(msg, "vcc = %d mV", vcc);
       CenterText(&ClearSans_Medium12pt7b, msg, 248);
+#endif
 
     } else {
       Serial.println("No valid air sample retrieved :-/");
@@ -221,6 +240,13 @@ void setup() {
     Serial.println("Could not connected to WiFi :-(");
     CenterText(&ClearSans_Medium18pt7b, "No WiFi :-(", 132);
   }
+
+  GraphSamples graph(10 * 60);
+  graph.Fill(gFlashSamples, seconds, pm25_to_aqi_value);
+  for (size_t i=0; i<graph.Length(); i+=14) {
+    printf("sample #%d : %d\n", i, graph.Value(i));
+  }
+  graph.Draw(canvas[0], canvas[1]);
 
   epd.TransmitPartial(canvas[0]->getBuffer(), canvas[1]->getBuffer(), 0, 0,
                       EPD_WIDTH, EPD_HEIGHT);
