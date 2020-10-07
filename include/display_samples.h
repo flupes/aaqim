@@ -30,6 +30,12 @@ class DisplaySamples {
 
   /**
    * Fills the buffer from samples stored on flash.
+   * 
+   * @param MAPPING_FUNC Function to map the average for each time slice to
+   *                     the bucket value. For example, for the air samples 
+   *                     we compute the average on the pm25 concentration 
+   *                     (linear scale), but desire to fill the buffer with
+   *                     the AQI index (using pm25_to_aqi_value).
    *
    * @param src accessor to the AirData samples stored on flash
    *            (should become a template if we ever need retrieving other
@@ -42,7 +48,8 @@ class DisplaySamples {
    * N/A values. The oldest element to retrieve on flash will be defined by:
    *   timestamp >= now - BUFFER_LENGTH * period
    */
-  size_t Fill(FlashAirDataSamples &src, uint32_t now);
+  template <typename MAPPING_FUNC>
+  size_t Fill(FlashAirDataSamples &src, uint32_t now, MAPPING_FUNC mapf);
 
   /** Return the sample at the requested position in the buffer.
    * @param position of the sample requested
@@ -52,7 +59,7 @@ class DisplaySamples {
    *          - If index is out of range, return INT16_MAX
    *          - If no sample in the bucket, return INT16_MIN
    */
-  int16_t AqiPm_2_5(size_t position) {
+  int16_t Value(size_t position) {
     if (position >= length_) {
       return INT16_MAX;
     } else {
@@ -76,8 +83,9 @@ class DisplaySamples {
 };
 
 template <size_t BUFFER_LENGTH, typename DATA_TYPE>
+template <typename MAPPING_FUNC>
 size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
-                                                      uint32_t now) {
+                                                      uint32_t now, MAPPING_FUNC mapf) {
   // Initialize min/max (cannot use INT16_MIN because it is already used
   // to mark "no data"
   min_ = std::numeric_limits<DATA_TYPE>::max() - 1;
@@ -150,7 +158,7 @@ size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
         // move to previous buffer slot
         if (bucketCount > 0) {
           buffer_[length_ - bufferReversedIndex - 1] =
-            pm25_to_aqi_value(accumulator / (float)(bucketCount));
+            mapf(accumulator / (float)(bucketCount));
           count++;
           accumulator = 0;
           bucketCount = 0;
@@ -173,7 +181,7 @@ size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
   // flush last accumulated samples
   if (bucketCount > 0) {
     buffer_[length_ - bufferReversedIndex - 1] =
-        pm25_to_aqi_value(accumulator / (float)(bucketCount));
+        mapf(accumulator / (float)(bucketCount));
     bufferReversedIndex++;
     count++;
   }

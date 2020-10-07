@@ -17,7 +17,8 @@ FlashAirDataSamples gFlashSamples(gFlash, 64, kFlashOffset);
 void TestFillFromEmptyFlash() {
   gFlashSamples.Begin(true);
   DisplaySamples<8, int16_t> displaySamples(300);
-  size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);
+  size_t count =
+      displaySamples.Fill(gFlashSamples, kNowSeconds, pm25_to_aqi_value);
   TEST_ASSERT_EQUAL(0, count);
 }
 
@@ -72,25 +73,26 @@ void TestFillDisplaySample() {
   DisplaySamples<8, int16_t> displaySamples(300);
   TEST_ASSERT_EQUAL(8, displaySamples.Length());
 
-  size_t count = displaySamples.Fill(gFlashSamples, kNowSeconds);
+  size_t count =
+      displaySamples.Fill(gFlashSamples, kNowSeconds, pm25_to_aqi_value);
   TEST_ASSERT_EQUAL(4, count);
 
-  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(0));
-  TEST_ASSERT_EQUAL(100, displaySamples.AqiPm_2_5(1));
-  TEST_ASSERT_EQUAL(200, displaySamples.AqiPm_2_5(2));
-  TEST_ASSERT_EQUAL(300, displaySamples.AqiPm_2_5(3));
-  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(4));
-  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(5));
-  TEST_ASSERT_EQUAL(400, displaySamples.AqiPm_2_5(6));
-  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.AqiPm_2_5(7));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.Value(0));
+  TEST_ASSERT_EQUAL(100, displaySamples.Value(1));
+  TEST_ASSERT_EQUAL(200, displaySamples.Value(2));
+  TEST_ASSERT_EQUAL(300, displaySamples.Value(3));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.Value(4));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.Value(5));
+  TEST_ASSERT_EQUAL(400, displaySamples.Value(6));
+  TEST_ASSERT_EQUAL(INT16_MIN, displaySamples.Value(7));
 
   // Out of range index
-  TEST_ASSERT_EQUAL(INT16_MAX, displaySamples.AqiPm_2_5(8));
+  TEST_ASSERT_EQUAL(INT16_MAX, displaySamples.Value(8));
 
 #if defined(AAQIM_DEBUG)
   // For unknown reason, this does *not* print when running on the ESP8266!
   for (size_t s = 0; s < displaySamples.Length(); s++) {
-    int16_t aqi = displaySamples.AqiPm_2_5(s);
+    int16_t aqi = displaySamples.Value(s);
     if (aqi == INT16_MIN) {
       printf("| N/A ");
     } else {
