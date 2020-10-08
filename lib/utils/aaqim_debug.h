@@ -1,5 +1,5 @@
-#ifndef AAQIM_UTILS_H
-#define AAQIM_UTILS_H
+#ifndef AAQIM_DEBUG_H
+#define AAQIM_DEBUG_H
 
 #if defined(AAQIM_DEBUG)
 #define dbg_printf(args...) printf(args)

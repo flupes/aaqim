@@ -1,4 +1,4 @@
-#include "aaqim_utils.h"
+#include "aaqim_debug.h"
 #include "display_samples.h"
 #include "unity.h"
 
@@ -12,7 +12,7 @@ SimFlash gFlash;
 const uint32_t kFlashOffset = 0x000A0000;
 const uint32_t kNowSeconds = k2019epoch + 365 * 24 * 3600;
 
-FlashAirDataSamples gFlashSamples(gFlash, 64, kFlashOffset);
+FlashSamples<AirSampleData> gFlashSamples(gFlash, 64, kFlashOffset);
 
 void TestFillFromEmptyFlash() {
   gFlashSamples.Begin(true);

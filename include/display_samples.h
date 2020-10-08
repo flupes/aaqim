@@ -3,11 +3,9 @@
 
 #include <limits>
 
-#include "aaqim_utils.h"
+#include "aaqim_debug.h"
 #include "air_sample.h"
 #include "flash_samples.h"
-
-typedef FlashSamples<AirSampleData> FlashAirDataSamples;
 
 /**
  * Create a linear buffer which is a "view" of sample stored on flash.
@@ -48,8 +46,8 @@ class DisplaySamples {
    * N/A values. The oldest element to retrieve on flash will be defined by:
    *   timestamp >= now - BUFFER_LENGTH * period
    */
-  template <typename MAPPING_FUNC>
-  size_t Fill(FlashAirDataSamples &src, uint32_t now, MAPPING_FUNC mapf);
+  template <typename SAMPLES_SRC, typename MAPPING_FUNC>
+  size_t Fill(SAMPLES_SRC &src, uint32_t now, MAPPING_FUNC mapf);
 
   /** Return the sample at the requested position in the buffer.
    * @param position of the sample requested
@@ -91,8 +89,8 @@ class DisplaySamples {
 };
 
 template <size_t BUFFER_LENGTH, typename DATA_TYPE>
-template <typename MAPPING_FUNC>
-size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(FlashAirDataSamples &src,
+template <typename SAMPLES_SRC, typename MAPPING_FUNC>
+size_t DisplaySamples<BUFFER_LENGTH, DATA_TYPE>::Fill(SAMPLES_SRC &src,
                                                       uint32_t now,
                                                       MAPPING_FUNC mapf) {
   // Initialize min/max (cannot use INT16_MIN because it is already used

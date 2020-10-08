@@ -1,25 +1,11 @@
-#ifndef AAQIM_CFAQI_H
-#define AAQIM_CFAQI_H
+#include "cfaqi.h"
 
 #include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
 
-enum class AqiLevel : int8_t {
-  OutOfRange = -1,
-  Good = 0,
-  Moderate = 1,
-  USG = 2,
-  Unhealthy = 3,
-  VeryUnhealthy = 4,
-  Hazardous = 5
-};
-const size_t kAqiLevelsCount = 6;
-
-const char *AqiNames[kAqiLevelsCount] = {
+const char *AqiNames[] = {
     "Good", "Moderate", "UnhealthySG", "Unhealthy", "VeryUnheal.", "Hazardous"};
 
-const char *AqiColors[kAqiLevelsCount] = {"Green", "Yellow", "Orange",
+const char *AqiColors[] = {"Green", "Yellow", "Orange",
                                           "Red",   "Purple", "Marron"};
 
 // From page 11 of:
@@ -67,5 +53,3 @@ int16_t pm25_to_aqi_value(float pm) {
   pm25_to_aqi(pm, value, level);
   return value;
 }
-
-#endif

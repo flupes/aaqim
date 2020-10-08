@@ -1,16 +1,10 @@
-#ifndef AAQIM_SAMPLE_ENCODING_H
-#define AAQIM_SAMPLE_ENCODING_H
+#include "air_sample.h"
 
-#include <stdint.h>
+#include <math.h>
 
-const uint32_t k2019epoch = 1546300800;  // Offset for compacted timestamps
-const uint32_t kSecondsResolution = 60;  // Resoluton of the encoded timestamps
-
-const int16_t kTemperatureOffsetF = -100;
-const uint32_t kPressureOffsetPa = 60000U;
-const uint32_t kMaxRecordablePressurePa = 125500U;
-
-enum class FlagsBitsPos : uint8_t { IsValid = 0, MaxPos = 7 };
+#include "cfaqi.h"
+#include "crc8_functions.h"
+#include "sample_encoding.h"
 
 void set_bit(uint8_t &byte, FlagsBitsPos pos) {
   byte |= (0x01 << static_cast<uint8_t>(pos));
@@ -116,4 +110,58 @@ void byte_to_stats(uint8_t code, float &mae, uint8_t &count) {
   mae = (float)(0x1F & code) * 2.0;
 }
 
-#endif
+void AirSample::Set(uint32_t seconds, float pm_1_0, float pm_2_5, float pm_10,
+                    float pressure, int temperature, int humidity, int count,
+                    float nmae) {
+  seconds_ = seconds;
+  pm_1_0_cf_ = pm_1_0;
+  pm_2_5_cf_ = pm_2_5;
+  pm_10_0_cf_ = pm_10;
+  pressure_ = pressure;
+  temperature_f_ = temperature;
+  if (humidity > 100) {
+    humidity_ = 100;
+  } else if (humidity < 0) {
+    humidity = 0;
+  } else {
+    humidity_ = humidity;
+  }
+  samples_count_ = count;
+  pm_2_5_mae_ = nmae;
+  pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
+}
+
+bool AirSample::IsValid() const {
+  return get_bit(flags_, FlagsBitsPos::IsValid);
+}
+
+void AirSample::FromData(const AirSampleData &data) {
+  timestamp_22bits_to_unix_seconds(data.timestamp24, seconds_);
+  pm_1_0_cf_ = short_to_cf(data.pm_1_0_short);
+  pm_2_5_cf_ = short_to_cf(data.pm_2_5_short);
+  pm_10_0_cf_ = short_to_cf(data.pm_10_0_short);
+  pressure_ = short_to_mbar_pressure(data.pressure_short);
+  temperature_f_ = byte_to_temperature_f(data.temperature_byte);
+  humidity_ = data.humidity_byte;
+  byte_to_stats(data.stats_byte, pm_2_5_mae_, samples_count_);
+  pm25_to_aqi(pm_2_5_cf_, aqi_pm25_, aqi_level_);
+  uint8_t crc = crc8_maxim((uint8_t *)(&data), kCompactedSampleSize - 1);
+  if (crc == data.crc) {
+    set_bit(flags_, FlagsBitsPos::IsValid);
+  } else {
+    clear_bit(flags_, FlagsBitsPos::IsValid);
+  }
+}
+
+void AirSample::ToData(AirSampleData &data) {
+  unix_seconds_to_timestamp_22bits(seconds_, data.timestamp24);
+  data.reserved = 0x00;
+  data.pm_1_0_short = cf_to_short(pm_1_0_cf_);
+  data.pm_2_5_short = cf_to_short(pm_2_5_cf_);
+  data.pm_10_0_short = cf_to_short(pm_10_0_cf_);
+  data.pressure_short = pressure_mbar_to_short(pressure_);
+  data.temperature_byte = temperature_f_to_byte(temperature_f_);
+  data.humidity_byte = humidity_;
+  stats_to_byte(pm_2_5_mae_, samples_count_, data.stats_byte);
+  data.crc = crc8_maxim((uint8_t *)(&data), 15);
+}

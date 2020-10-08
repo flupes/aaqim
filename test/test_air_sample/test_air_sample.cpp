@@ -1,4 +1,6 @@
 #include "air_sample.h"
+#include "crc8_functions.h"
+#include "sample_encoding.h"
 
 #include "unity.h"
 

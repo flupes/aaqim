@@ -8,7 +8,7 @@
 #include <time.h>
 
 #include "Fonts/ClearSans-Bold-48pt7b.h"
-// #include "Fonts/ClearSans-Medium-12pt7b.h"
+#include "Fonts/ClearSans-Medium-12pt7b.h"
 #include "Fonts/ClearSans-Medium-18pt7b.h"
 #include "analyze.h"
 #include "credentials.h"
@@ -24,7 +24,7 @@ Epd epd;
 GFXcanvas1 *canvas[2];
 
 EspFlash gFlash;
-FlashAirDataSamples gFlashSamples(gFlash, 0xA000);
+FlashSamples<AirSampleData> gFlashSamples(gFlash, 0xA000);
 
 // Use the AD converted of the ESP8266 to read the chip supply
 // voltage (instean of the analog input pin)
