@@ -71,6 +71,21 @@ void setup() {
   Serial.print("Free RAM after Canvas allocation: ");
   Serial.println(ESP.getFreeHeap());
 
+  canvas[1]->fillCircle(EPD_WIDTH / 2, EPD_HEIGHT / 2, 60, COLORED);
+  canvas[0]->drawFastHLine(0, EPD_HEIGHT / 2, EPD_WIDTH, COLORED);
+  canvas[0]->drawFastVLine(EPD_WIDTH / 2, 0, EPD_HEIGHT, COLORED);
+  // we need to "uncolor" the red buffer where we want to draw black!
+  canvas[1]->drawFastHLine(0, EPD_HEIGHT / 2, EPD_WIDTH, UNCOLORED);
+  canvas[1]->drawFastVLine(EPD_WIDTH / 2, 0, EPD_HEIGHT, UNCOLORED);
+  // The order of buffer transmission does not seem to matter: the red
+  // color always take precedence over the black. This seems to be at 
+  // the hardware level, because even swapping the odering in the
+  // epd2in7b driver does not help
+  epd.TransmitPartialRed(canvas[1]->getBuffer(), 0, 0, EPD_WIDTH, EPD_HEIGHT);
+  epd.TransmitPartialBlack(canvas[0]->getBuffer(), 0, 0, EPD_WIDTH, EPD_HEIGHT);
+  epd.DisplayFrame();
+  delay(12 * 1000);
+
   for (uint8_t i = 0; i < 2; i++) {
     canvas[i]->fillScreen(UNCOLORED);
 
@@ -114,6 +129,9 @@ void setup() {
 
   Serial.println("Put display to sleep");
   epd.Sleep();
+
+  Serial.println("Put the board to deep sleep");
+  ESP.deepSleep(120E6);
 }
 
 void loop() {}
