@@ -4,7 +4,7 @@ Simple Air Quality Monitor using data collected from the **web** (no local senso
 
 Based on an ESP8266 and E-paper display.
 
-<img src="./aaqim-system.jpg" alt="AAQIM System" width="75%">
+<img src="./aaqim-system-graph.jpg" alt="AAQIM System" width="75%">
 
 This is not a general, multi-purpose code base, but a quick hack for personal
 use.
@@ -40,8 +40,8 @@ leading to a very low power solution.
 
 ## Details
 
-  - [Some notes on the design](./design.md) (work in progress regarding the flash use)
-  - [Hardware related info](./hardware.md) (power consumption numbers to come)
+  - [Some notes on the design](./design.md) (historical data and power consumption)
+  - [Hardware related info](./hardware.md) (pinout, etc.)
 
 ## Bill of Material
 
