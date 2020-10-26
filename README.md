@@ -12,6 +12,8 @@ use.
 The `pm25_to_aqi` provides a potential useful conversion function that passes
 its unit tests.
 
+It is using Adafruitt library.
+
 ## Why
 
 The air quality has been a real concern in the West from August 2020.
