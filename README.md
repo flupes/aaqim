@@ -4,7 +4,10 @@ Simple Air Quality Monitor using data collected from the **web** (no local senso
 
 Based on an ESP8266 and E-paper display.
 
-<img src="./imgs/aaqim-system-graph.jpg" alt="AAQIM System" width="75%">
+<p float="left">
+  <img src="./imgs/aaqim-monitor.jpg" alt="AAQIM Monitor with Enclosure" width="40%">
+  <img src="./imgs/aaqim-display.jpg" alt="AAQIM Display Details" width="40%">
+</p>
 
 This is not a general, multi-purpose code base, but a quick hack for personal
 use.
@@ -40,10 +43,11 @@ leading to a very low power solution.
   - [Some notes on the design](./design.md) (historical data and power consumption)
   - [Hardware related info](./hardware.md) (pinout, etc.)
 
-<p float="left">
-<img src="./imgs/aaqim-monitor.jpg" alt="AAQIM Monitor with Enclosure" width="30%">
-<img src="./imgs/aaqim-display.jpg" alt="AAQIM Display Details" width="30%">
-</p>
+The STL models for the enclosure are in the `./stls` directory.
+The source Fusion-360 model is available with [this link](https://a360.co/31YtSna).
+The enclosure holds the Huzzah in place without any screws.
+
+<img src="./imgs/aaqim-system-graph.jpg" alt="AAQIM System" width="75%">
 
 ## Bill of Material
 
