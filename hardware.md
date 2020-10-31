@@ -28,6 +28,8 @@ Pins on the breakout but not available:
 
 So the blue LED will remain ON while from the begining of the display buffer transfer to the EPD until the board goes to sleep.
 
+<img src="./imgs/aaqim-system-early.jpg" alt="AAQIM System" width="50%">
+
 ### Other
 
 Wake up from sleep:

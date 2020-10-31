@@ -4,13 +4,10 @@ Simple Air Quality Monitor using data collected from the **web** (no local senso
 
 Based on an ESP8266 and E-paper display.
 
-<img src="./aaqim-system-graph.jpg" alt="AAQIM System" width="75%">
+<img src="./imgs/aaqim-system-graph.jpg" alt="AAQIM System" width="75%">
 
 This is not a general, multi-purpose code base, but a quick hack for personal
 use.
-
-The `pm25_to_aqi` provides a potential useful conversion function that passes
-its unit tests.
 
 ## Why
 
@@ -43,6 +40,11 @@ leading to a very low power solution.
   - [Some notes on the design](./design.md) (historical data and power consumption)
   - [Hardware related info](./hardware.md) (pinout, etc.)
 
+<p float="left">
+<img src="./imgs/aaqim-monitor.jpg" alt="AAQIM Monitor with Enclosure" width="30%">
+<img src="./imgs/aaqim-display.jpg" alt="AAQIM Display Details" width="30%">
+</p>
+
 ## Bill of Material
 
 Not by design, just un-unsed parts from previous projects:
@@ -55,7 +57,7 @@ Not by design, just un-unsed parts from previous projects:
     [DigiBaro](https://github.com/flupes/digibaro2/blob/master/README.md).
   - LiPo battery.
 
-## How to build
+## How to build the software
 
 The project is using
 [PlatformIO](https://docs.platformio.org/en/latest/home/index.html). I develop
@@ -68,3 +70,18 @@ Since any modern computer will today be `amd64`, you will have to install the 32
 bit compatibility packages:
 
     sudo apt install gcc-multilib g++-multilib
+
+### Dependencies
+
+Some dependencies are pulled using git submodules. Get them with:
+
+    git submodule init
+    git submodule update
+    cd lib # symlink to avoid building the full waveshare source tree
+    ln -s ../externals/ePaperDisplay/Arduino/epd2in7b epd2in7b
+
+This includes the e-Paper driver from WaveShare and a fork of the great Adafruit GFX library.
+
+Other "normal" dependencies are installed with PlatformIO:
+  - ArduinoJson + StreamUtils from bblanchon
+
