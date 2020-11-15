@@ -1,13 +1,10 @@
 # aaqim = Arduino AQI Monitor
 
+<img src="./imgs/aaqim-painted.jpg" alt="AAQIM Monitor with Enclosure" width="60%">
+
 Simple Air Quality Monitor using data collected from the **web** (no local sensor).
 
 Based on an ESP8266 and E-paper display.
-
-<p float="left">
-  <img src="./imgs/aaqim-painted.jpg" alt="AAQIM Monitor with Enclosure" width="40%">
-  <img src="./imgs/aaqim-high.jpg" alt="AAQIM Display Details" width="40%">
-</p>
 
 This is not a general, multi-purpose code base, but a quick hack for personal
 use.
@@ -37,6 +34,11 @@ people sensor data. The display is based on a E-Paper panel that does not
 consume current only when it needs to be updated. Since air quality is a slow
 evolving parameter, the board and panel are simply stopped between updates,
 leading to a very low power solution.
+
+<p float="left">
+  <img src="./imgs/aaqim-high.jpg" alt="AAQIM Display Details" width="42%">
+  <img src="./imgs/aaqim-low.jpg" alt="AAQIM Graph Display" width="45%">
+</p>
 
 ## Details
 
