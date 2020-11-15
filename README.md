@@ -5,8 +5,8 @@ Simple Air Quality Monitor using data collected from the **web** (no local senso
 Based on an ESP8266 and E-paper display.
 
 <p float="left">
-  <img src="./imgs/aaqim-monitor.jpg" alt="AAQIM Monitor with Enclosure" width="40%">
-  <img src="./imgs/aaqim-display.jpg" alt="AAQIM Display Details" width="40%">
+  <img src="./imgs/aaqim-painted.jpg" alt="AAQIM Monitor with Enclosure" width="40%">
+  <img src="./imgs/aaqim-high.jpg" alt="AAQIM Display Details" width="40%">
 </p>
 
 This is not a general, multi-purpose code base, but a quick hack for personal
